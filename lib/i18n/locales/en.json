@@ -1,0 +1,625 @@
+{
+  "tabs": {
+    "image": "Image Recognition",
+    "speech": "Speech Recognition",
+    "text": "Text Translation",
+    "video": "Video Recognition",
+    "file": "File Recognition",
+    "pdf": "PDF Recognition"
+  },
+  "buttons": {
+    "getStarted": "Get Started",
+    "startTranslate": "Start Translation"
+  },
+  "uploadImage": "Upload Image",
+  "uploadAudio": "Upload Audio",
+  "uploadVideo": "Upload Video",
+  "uploadPDF": "Upload PDF",
+  "dropHere": "Drop to upload",
+  "dragAndDrop": "Drag and drop file here, or click to upload",
+  "dragAndDropPDF": "Drag and drop PDF file here, or click to select",
+  "selectPDF": "Select PDF",
+  "selectPDFService": "Select PDF Service",
+  "extractAction": "Extract Text",
+  "extractingStatus": "Extracting...",
+  "targetLanguage": "Select Target Language",
+  "serviceProvider": "Select Service",
+  "translateAction": "Translate",
+  "translating": "Translating...",
+  "improveTranslation": "Improve",
+  "improveTooltip": "Use AI to improve translation",
+  "extractedText": "Extracted Text",
+  "translatedText": "Translation Result",
+  "noTextExtracted": "No text extracted yet",
+  "startListening": "Start Recording",
+  "stopListening": "Stop Recording",
+  "selectImage": "Select Image",
+  "processingStatus": "Processing...",
+  "appName": "Translation Ai",
+  "switchLanguage": "Switch Language",
+  "toggleTheme": "Toggle Theme",
+  "errors": {
+    "image": {
+      "title": "Image Recognition Failed",
+      "desc": "Please try again later"
+    },
+    "pdf": {
+      "title": "PDF Processing Failed",
+      "desc": "Please try again later"
+    },
+    "text": {
+      "title": "Translation Failed",
+      "desc": "Please try again later"
+    },
+    "speech": {
+      "title": "Speech Recognition Failed",
+      "desc": "Please try again later"
+    },
+    "video": {
+      "title": "Video Processing Failed",
+      "desc": "Please try again later"
+    },
+    "extract": {
+      "extractingError": "Text Extraction Failed",
+      "extractingDesc": "Please try again later"
+    },
+    "noLanguage": "No Target Language",
+    "noLanguageDesc": "Please select a target language",
+    "noTranslation": "No Translation",
+    "noTranslationDesc": "Please translate first",
+    "translationError": "Translation Failed",
+    "translationDesc": "An error occurred during translation, please try again",
+    "improvementError": "Improvement Failed",
+    "improvementDesc": "An error occurred during improvement, please try again",
+    "speechNotSupported": "Speech Recognition Not Available",
+    "speechNotSupportedDesc": "Your browser does not support speech recognition",
+    "invalidFile": "Invalid File",
+    "invalidFileDesc": "Please select a valid file",
+    "authRequired": "Authentication Required",
+    "pleaseLogin": "Please log in to access this feature",
+    "cancelButton": "Cancel",
+    "registerButton": "Register",
+    "loginButton": "Log In"
+  },
+  "error": {
+    "authRequired": "Authentication Required",
+    "pleaseLogin": "Please log in to access this feature",
+    "cancelButton": "Cancel",
+    "registerButton": "Register",
+    "loginButton": "Log In",
+    "usageLimitExceeded": "Usage Limit Exceeded",
+    "textLimitExceededDesc": "You have reached your daily text translation limit",
+    "imageLimitExceededDesc": "You have reached your daily image recognition limit",
+    "pdfLimitExceededDesc": "You have reached your daily PDF processing limit",
+    "speechLimitExceededDesc": "You have reached your daily speech recognition limit",
+    "videoLimitExceededDesc": "You have reached your daily video processing limit",
+    "invalidImageFile": "Invalid Image File",
+    "invalidImageFileDesc": "Please select a valid image file",
+    "invalidFile": "Invalid File",
+    "invalidFileDesc": "Please select a valid file",
+    "invalidAudioFile": "Invalid Audio File",
+    "invalidAudioFileDesc": "Please select a valid audio file",
+    "audioRecognition": "Audio Recognition Failed",
+    "audioProcessing": "Audio Processing Failed",
+    "invalidVideoFile": "Invalid Video File",
+    "invalidVideoFileDesc": "Please select a valid video file",
+    "videoProcessingDesc": "Failed to process video, please try again",
+    "noTextExtracted": "No Text Extracted",
+    "noTextExtractedDesc": "Could not extract any text from the file",
+    "videoUploadFailed": "Video Upload Failed",
+    "videoUploadFailedDesc": "Failed to upload video, please try again",
+    "videoProcessing": "Video Processing Failed",
+    "invalidPDFFile": "Invalid PDF File",
+    "noText": "No Text",
+    "noTextDesc": "Please enter some text to translate",
+    "noLanguage": "No Target Language",
+    "noLanguageDesc": "Please select a target language",
+    "translationError": "Translation Failed",
+    "noTranslation": "No Translation",
+    "noTranslationDesc": "Please translate first",
+    "improving": "Improvement Failed",
+    "improvingDesc": "Failed to improve translation, please try again",
+    "speechNotSupported": "Speech Recognition Not Available",
+    "speechNotSupportedDesc": "Your browser does not support speech recognition",
+    "speechRecognition": "Speech Recognition Failed",
+    "videoServiceNotSupported": "Video service not supported",
+    "taskProcessingFailed": "Task processing failed",
+    "taskProcessingTimeout": "Task processing timeout",
+    "boundaryTitle": "Something went wrong",
+    "boundaryDescription": "An unexpected error occurred. Try again or return to the home page.",
+    "retryButton": "Try again",
+    "homeButton": "Back to home"
+  },
+  "console": {
+    "quotaFetchFailed": "Failed to fetch quota:",
+    "quotaInfoFetchFailed": "Failed to fetch quota information:",
+    "usageUpdateFailed": "Failed to update usage count:",
+    "videoTaskCreateFailed": "Failed to create video recognition task:",
+    "ocrProcessingError": "Error processing OCR result:",
+    "videoUploadError": "Video upload error:",
+    "videoProcessingError": "Video processing error:",
+    "fileProcessingFailed": "File processing failed:",
+    "translationServiceError": "{0} translation service error:",
+    "usingFallbackService": "Trying to use DeepSeek as fallback service...",
+    "translationError": "Translation error:",
+    "fileProcessingError": "File processing error:",
+    "taskQueryFailed": "Failed to query task result:",
+    "pollingResult": "Polling returned result:",
+    "startingPdfProcessing": "Starting to process PDF file with {0}:",
+    "pdfProcessingStatus": "PDF processing status:",
+    "pdfProcessingComplete": "PDF processing complete, extracted text length:",
+    "extractedTextPreview": "Extracted text preview:",
+    "videoFramesExtracting": "Starting to extract video frames...",
+    "videoFramesExtracted": "Video frames extraction complete, frame count: {0}",
+    "videoFramesExample": "First frame data example: {0}",
+    "videoProcessed": "Video processing complete, extracted text length: {0}",
+    "videoUploaded": "Video uploaded successfully, URL: {0}",
+    "videoTaskPolling": "Starting to poll task status...",
+    "videoOcrProcessing": "Starting to process OCR result:",
+    "videoOcrResult": "Extracted text: {0}",
+    "videoNoText": "No text extracted",
+    "videoOcrError": "Error processing OCR result:",
+    "videoTaskResult": "Polling returned result:",
+    "videoTaskFailed": "Task processing failed",
+    "videoTaskQueryFailed": "Failed to query task result:",
+    "videoTaskTimeout": "Task processing timeout",
+    "pdfProcessing": "Starting to process PDF file with {0}: {1}",
+    "pdfStatus": "PDF processing status: {0}",
+    "pdfProcessed": "PDF processing complete, extracted text length: {0}",
+    "pdfPreview": "Extracted text preview: {0}...",
+    "tryingDeepSeek": "Trying to use DeepSeek as fallback service...",
+    "selectedLanguage": "Selected language: {0}"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "languages": {
+    "english": "English",
+    "chinese": "中文",
+    "japanese": "日本語",
+    "spanish": "Español"
+  },
+  "selectAsrService": "Select Speech Recognition Service",
+  "asrServices": {
+    "tencent": "Tencent Cloud"
+  },
+  "enterText": "Enter text to translate",
+  "chooseFile": "Choose File",
+  "ocrServices": {
+    "tencent": "Tencent Cloud",
+    "qwen": "Qwen",
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "kimi": "Kimi",
+    "step": "StepFun AI"
+  },
+  "translationServices": {
+    "deepseek": "DeepSeek",
+    "qwen": "Qwen",
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "hunyuan": "Tencent Hunyuan",
+    "4o-mini": "OpenAI",
+    "minimax": "MiniMax",
+    "siliconflow": "Llama-3.3",
+    "claude": "Claude",
+    "kimi": "Kimi",
+    "step": "StepFun AI"
+  },
+  "videoServices": {
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "qwen": "Qwen",
+    "kimi": "Kimi"
+  },
+  "pdfServices": {
+    "tencent": "Tencent Cloud",
+    "qwen": "Qwen",
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "kimi": "Kimi",
+    "step": "StepFun AI"
+  },
+  "title": "Translation Ai",
+  "description": "High-quality multilingual translation powered by AI technology",
+  "landing": {
+    "hero": {
+      "appTitle": "Translation Ai",
+      "subtitle": "One-stop multilingual translation solution, supporting text, image, PDF, speech and video translation",
+      "cta": "Get Started",
+      "badge": "AI-Powered · Multilingual Support",
+      "subscribe": "Subscribe"
+    },
+    "features": {
+      "title": "Core Features",
+      "subtitle": "Text, image, PDF, speech, and video—one tool for every format",
+      "text": {
+        "title": "Text Translation",
+        "description": "Long-form and multi-language support; accurate and natural. Unlimited free use when logged in"
+      },
+      "image": {
+        "title": "Image Translation",
+        "description": "One-click OCR and translation from screenshots, photos, and posters in many languages"
+      },
+      "pdf": {
+        "title": "PDF Translation",
+        "description": "Extract full text and translate while preserving layout and structure for documents"
+      },
+      "speech": {
+        "title": "Speech Translation",
+        "description": "Speak or upload audio; multi-language recognition and translation for meetings and study"
+      },
+      "video": {
+        "title": "Video Translation",
+        "description": "Extract on-screen text and speech from video and get translations for learning and content creation"
+      }
+    },
+    "highlights": {
+      "title": "Key Benefits",
+      "subtitle": "Upload, translate, and switch input types in one browser—no install required",
+      "multilingual": {
+        "title": "Multilingual Support",
+        "description": "UI in Chinese, English, Japanese, or Spanish; translate across many widely used language pairs"
+      },
+      "theme": {
+        "title": "Theme Switching",
+        "description": "Switch between dark and light mode for comfortable use day or night"
+      },
+      "privacy": {
+        "title": "Privacy Protection",
+        "description": "We don't retain translations or uploads long-term on our servers; third-party AI may process content to deliver the service"
+      },
+      "web": {
+        "title": "Web-based",
+        "description": "Use in your browser—no install needed, on phone or desktop"
+      }
+    },
+    "steps": {
+      "title": "How It Works",
+      "subtitle": "Pick a mode, add your content, review the output—all in your browser",
+      "select": {
+        "title": "Choose Function",
+        "description": "Choose text, image, PDF, speech, or video translation for your content"
+      },
+      "upload": {
+        "title": "Upload Content",
+        "description": "Upload files, paste text, or submit audio and video as guided"
+      },
+      "translate": {
+        "title": "Get Results",
+        "description": "Review and copy the translation; adjust language pair or model when needed"
+      }
+    },
+    "testimonials": {
+      "title": "Loved by people who work across languages",
+      "subtitle": "Short notes from translators, students, and teams—about how they actually use Translation Ai.",
+      "1": {
+        "quote": "I live in screenshots and UI strings. Pulling text out of product mockups used to be half my day; now I draft in one place and iterate faster.",
+        "author": "Elena Voss",
+        "role": "Localization freelancer"
+      },
+      "2": {
+        "quote": "Clean layout, obvious next steps. I keep dark mode on for late edits—small thing, but it matters when you ship weekly.",
+        "author": "Jordan Park",
+        "role": "Content marketer"
+      },
+      "3": {
+        "quote": "Journal PDFs in two languages were slowing me down. I get a workable draft and fix citations myself—good enough to move the paper forward.",
+        "author": "Priya Nair",
+        "role": "Graduate researcher"
+      },
+      "4": {
+        "quote": "Text, image, and PDF in one tab beats juggling three different sites. I pick a model when the tone matters, then move on.",
+        "author": "Chris Okonkwo",
+        "role": "Product operations"
+      },
+      "5": {
+        "quote": "Voice memos from overseas partners used to sit in a folder. Transcribing plus translate in one flow gets replies out the same afternoon.",
+        "author": "Rachel Bernstein",
+        "role": "Import–export coordinator"
+      },
+      "6": {
+        "quote": "Rough cuts with mixed languages—I pull dialogue out, translate, and drop lines back into my notes. Less stop-and-go than my old workflow.",
+        "author": "Sam Okada",
+        "role": "Video editor"
+      }
+    },
+    "footer": {
+      "browsers": "Supports all major browsers",
+      "privacy": "Committed to protecting your privacy"
+    }
+  },
+  "translate": {
+    "selectVideoService": "Select Video Service",
+    "videoService": "Video Recognition Service",
+    "zhipu": "Z.AI",
+    "aliyun": "Alibaba Cloud",
+    "uploadVideo": "Upload Video"
+  },
+  "banner": {
+    "text": "Translation Ai is now live with limited-time free trial. Follow us on Twitter for updates",
+    "twitter": "https://x.com/"
+  },
+  "usage": {
+    "remainingToday": "Remaining Today: {0}/{1}",
+    "remainingThisMonth": "Remaining This Month: {0}/{1}",
+    "textTranslation": "Text Translation",
+    "imageRecognition": "Image Recognition",
+    "pdfRecognition": "PDF Recognition",
+    "speechRecognition": "Speech Recognition",
+    "videoRecognition": "Video Recognition",
+    "dailyLimit": "Daily Free Usage",
+    "loginToGet": "Login to access more features",
+    "unlimited": "Unlimited text translation"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "profileButton": "Profile",
+    "profile": {
+      "title": "Profile",
+      "description": "View your account information and usage quotas",
+      "basicInfo": {
+        "title": "Basic Information",
+        "email": "Email",
+        "username": "Username",
+        "userId": "User ID",
+        "registerTime": "Registration Time",
+        "editUsername": {
+          "placeholder": "Enter new username",
+          "save": "Save",
+          "cancel": "Cancel",
+          "success": "Username updated successfully",
+          "error": {
+            "empty": "Username cannot be empty",
+            "failed": "Update failed, please try again"
+          }
+        },
+        "social": {
+          "githubProvider": "GitHub",
+          "googleProvider": "Google",
+          "bound": "Connected",
+          "unbound": "Not Connected",
+          "bind": "Connect %{provider}",
+          "bindFailed": "Failed to connect %{provider}"
+        }
+      },
+      "subscription": {
+        "title": "Subscription",
+        "plan": {
+          "trial": "Free Plan",
+          "monthly": "Monthly Plan",
+          "yearly": "Yearly Plan"
+        },
+        "customerId": "Customer ID",
+        "subscriptionId": "Subscription ID",
+        "expiryDate": "Expires: {date}",
+        "success": "Subscription successful! Thank you for your support",
+        "free": "Free",
+        "premium": "Premium",
+        "enterprise": "Enterprise",
+        "quota": {
+          "text": "Text Translation",
+          "image": "Image Recognition",
+          "pdf": "PDF Processing",
+          "speech": "Speech Recognition",
+          "video": "Video Processing",
+          "textTranslation": "Text Translation",
+          "imageRecognition": "Image Recognition",
+          "pdfRecognition": "PDF Recognition",
+          "speechRecognition": "Speech Recognition",
+          "videoRecognition": "Video Recognition",
+          "unlimited": "Unlimited",
+          "usage": "{used}/{quota}"
+        },
+        "dialog": {
+          "title": "Upgrade to Premium",
+          "description": "Upgrade to premium for more daily usage and a smoother translation experience.",
+          "benefits": {
+            "title": "Premium Benefits:",
+            "imageQuota": "50 image recognitions per day",
+            "pdfQuota": "40 PDF processings per day",
+            "speechQuota": "30 speech recognitions per day",
+            "videoQuota": "10 video processings per day",
+            "priority": "Priority processing queue"
+          },
+          "buttons": {
+            "cancel": "Not Now",
+            "viewPlans": "View Plans"
+          }
+        }
+      }
+    },
+    "signOut": {
+      "action": "Sign Out",
+      "success": "Signed out successfully",
+      "error": "Failed to sign out"
+    },
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Enter your email and password to sign in",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "button": "Sign in",
+      "loading": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "error": {
+        "invalidCredentials": "Invalid email or password",
+        "required": "Please enter email and password"
+      },
+      "github": "Continue with GitHub",
+      "or": "or",
+      "google": "Continue with Google"
+    },
+    "register": {
+      "title": "Sign up",
+      "subtitle": "Create your account",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Enter your password again",
+      "button": "Sign up",
+      "loading": "Signing up...",
+      "hasAccount": "Already have an account?",
+      "error": {
+        "passwordMismatch": "Passwords do not match",
+        "emailExists": "Email is already registered",
+        "required": "Please fill in all required fields"
+      },
+      "github": "Continue with GitHub",
+      "or": "or",
+      "success": "Registration successful",
+      "google": "Continue with Google"
+    },
+    "error": {
+      "accessDenied": "Access denied, please try again",
+      "default": "An error occurred during login, please try again"
+    }
+  },
+  "quota": {
+    "types": {
+      "text": "Text Translation",
+      "image": "Image Recognition",
+      "pdf": "PDF Recognition",
+      "speech": "Speech Recognition",
+      "video": "Video Recognition"
+    },
+    "unlimited": "Unlimited",
+    "times": "times",
+    "remaining": "Remaining: %{count}",
+    "errors": {
+      "notLoggedIn": "Please login first",
+      "userNotFound": "User not found",
+      "invalidType": "Invalid usage type",
+      "limitReached": "Daily usage limit reached",
+      "recordFailed": "Failed to record usage",
+      "checkFailed": "Failed to check quota"
+    }
+  },
+  "pricing": {
+    "title": "Pricing Plans",
+    "subtitle": "Choose your plan and unlock unlimited translation",
+    "tiers": {
+      "free": {
+        "freeName": "Free Trial",
+        "freeDescription": "Experience basic features",
+        "freeCta": "Start Trial",
+        "features": {
+          "basic": [
+            "Unlimited text translation",
+            "5 image recognitions/month",
+            "3 PDF recognitions/month"
+          ],
+          "freeAdvanced": [
+            "2 speech recognitions/month",
+            "1 video recognition/month"
+          ],
+          "freeSupport": [
+            "Basic support"
+          ]
+        }
+      },
+      "monthly": {
+        "name": "Monthly Plan",
+        "description": "Perfect for individual use",
+        "cta": "Subscribe Now",
+        "period": "mo",
+        "features": {
+          "basic": [
+            "Unlimited text translation",
+            "50 image recognitions/day",
+            "40 PDF recognitions/day"
+          ],
+          "advanced": [
+            "30 speech recognitions/day",
+            "10 video recognitions/day",
+            "Priority processing"
+          ],
+          "support": [
+            "Priority support"
+          ]
+        }
+      },
+      "yearly": {
+        "name": "Annual Plan",
+        "description": "Best value for money",
+        "cta": "Subscribe Now",
+        "recommended": "Recommended",
+        "discount": "Save 17%",
+        "features": {
+          "basic": [
+            "Unlimited text translation",
+            "100 image recognitions/day",
+            "80 PDF recognitions/day"
+          ],
+          "advanced": [
+            "60 speech recognitions/day",
+            "20 video recognitions/day",
+            "Priority processing"
+          ],
+          "support": [
+            "24/7 dedicated support",
+            "API access (Coming soon)"
+          ]
+        }
+      }
+    },
+    "features": {
+      "basic": "Basic Features",
+      "advanced": "Advanced Features",
+      "support": "Support Services"
+    },
+    "faq": {
+      "title": "FAQ",
+      "subtitle": "Still have questions? We're happy to help—reach out via the options below",
+      "cards": {
+        "security": {
+          "title": "Data security & privacy",
+          "content": "We do not keep your translations or uploads on our servers after processing. Your content may be sent to third-party AI providers to perform the service. See our Privacy Policy for details."
+        },
+        "quota": {
+          "title": "How are quotas calculated and reset?",
+          "content": "Free tier: image, PDF, speech, and video quotas are per calendar month and reset on the 1st; unused usage doesn't roll over. Paid tiers: quotas are per calendar day and reset at midnight; unused usage doesn't roll over."
+        },
+        "payment": {
+          "title": "What payment methods are supported?",
+          "content": "We use Stripe for payments. You can pay with major credit and debit cards. Stripe handles all payment details securely; we don't store your full card number or other sensitive payment data."
+        },
+        "support": {
+          "title": "How do I contact support?",
+          "content": "For questions about subscriptions, quotas, or usage, email us at hello@translation.ai and we'll get back to you as soon as we can."
+        }
+      },
+      "fullPrivacyLink": "Full Privacy Policy"
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "updated": "Last updated: 12 April 2026",
+    "backToPricing": "Back to Pricing",
+    "s1h": "Overview",
+    "s1p": "Translation Ai (\"we\", \"us\") provides this translation and content processing service. This policy explains what information is involved and how we handle it.",
+    "s2h": "Information we process",
+    "s2p": "• Account: When you register or use GitHub or Google sign-in, we process email, display name, and data needed for authentication.\n\n• Usage: We record feature usage and quotas to enforce your plan.\n\n• Content you submit: Text, images, documents, audio, or video you send are processed to deliver translation, OCR, speech, or video features. We do not use your content to train proprietary models for this product.",
+    "s3h": "Third-party services",
+    "s3p": "Providing the service requires sending data (which may include your content) to hosting providers, AI model APIs, and, for payments, Stripe. Those parties process data under their own terms and privacy policies. We do not store your full payment card number.",
+    "s4h": "Storage and retention",
+    "s4p": "We do not intend to keep your translation inputs and outputs on our systems after processing is finished. We may retain account, billing, subscription, and limited operational and security logs as required to run the service and meet legal obligations.",
+    "s5h": "Security",
+    "s5p": "We use HTTPS and reasonable access controls. No online service can guarantee perfect security.",
+    "s6h": "Contact",
+    "s6p": "For privacy-related questions, contact hello@translation.ai."
+  },
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing",
+    "privacy": "Privacy Policy"
+  }
+}

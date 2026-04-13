@@ -1,0 +1,658 @@
+{
+  "loading": "処理中…",
+  "uploadFailed": "アップロードに失敗しました",
+  "tabs": {
+    "image": "画像認識",
+    "speech": "音声認識",
+    "text": "テキスト翻訳",
+    "video": "動画認識",
+    "file": "ファイル認識",
+    "pdf": "PDF 認識"
+  },
+  "buttons": {
+    "getStarted": "今すぐ試す",
+    "startTranslate": "翻訳を開始"
+  },
+  "uploadImage": "画像をアップロード",
+  "uploadAudio": "音声をアップロード",
+  "uploadVideo": "動画をアップロード",
+  "dropHere": "離してアップロード",
+  "dragAndDrop": "画像をここにドラッグするか、クリックしてファイルを選択",
+  "dragAndDropPDF": "PDF をここにドラッグするか、クリックしてファイルを選択",
+  "extractAction": "テキストを抽出",
+  "extractingStatus": "抽出中…",
+  "targetLanguage": "翻訳先の言語",
+  "selectPDFService": "PDF 処理サービスを選択",
+  "serviceProvider": "サービスを選択",
+  "translateAction": "翻訳を開始",
+  "translating": "翻訳中…",
+  "improveTranslation": "改善",
+  "improveTooltip": "AI で翻訳結果を改善します",
+  "extractedText": "抽出したテキスト",
+  "translatedText": "翻訳結果",
+  "noTextExtracted": "まだテキストを抽出していません",
+  "noTranslation": "まだ翻訳していません",
+  "startListening": "録音して認識",
+  "stopListening": "録音を停止",
+  "selectImage": "画像を選択",
+  "selectPDF": "PDF ファイルを選択",
+  "error": {
+    "authRequired": "ログインが必要です",
+    "pleaseLogin": "この機能を使うにはログインしてください",
+    "cancelButton": "キャンセル",
+    "registerButton": "登録",
+    "loginButton": "ログイン",
+    "usageLimitExceeded": "利用回数の上限に達しました",
+    "textLimitExceededDesc": "本日のテキスト翻訳の上限に達しました",
+    "imageLimitExceededDesc": "本日の画像認識は上限に達しました。明日またお試しください",
+    "pdfLimitExceededDesc": "本日の PDF 認識は上限に達しました。明日またお試しください",
+    "speechLimitExceededDesc": "本日の音声認識は上限に達しました。明日またお試しください",
+    "videoLimitExceededDesc": "本日の動画認識は上限に達しました。明日またお試しください",
+    "invalidImageFile": "無効な画像ファイルです",
+    "invalidImageFileDesc": "有効な画像ファイルを選択してください",
+    "invalidFile": "無効なファイルです",
+    "invalidFileDesc": "画像ファイルをアップロードしてください",
+    "invalidAudioFile": "無効な音声ファイルです",
+    "invalidAudioFileDesc": "有効な音声ファイルを選択してください",
+    "audioRecognition": "音声の認識に失敗しました",
+    "audioProcessing": "音声の処理に失敗しました",
+    "invalidVideoFile": "無効な動画ファイルです",
+    "invalidVideoFileDesc": "動画ファイルをアップロードしてください",
+    "videoProcessingDesc": "動画の処理中にエラーが発生しました。もう一度お試しください",
+    "noTextExtracted": "テキストを抽出できませんでした",
+    "noTextExtractedDesc": "ファイルからテキストを抽出できませんでした",
+    "noImage": "画像が選択されていません",
+    "noImageDesc": "先に画像をアップロードしてください",
+    "noText": "テキストが入力されていません",
+    "noTextDesc": "翻訳するテキストを入力してください",
+    "noLanguage": "言語が選択されていません",
+    "noLanguageDesc": "翻訳先の言語を選択してください",
+    "noTranslation": "翻訳結果がありません",
+    "noTranslationDesc": "先に翻訳を実行してください",
+    "extractingError": "テキストの抽出に失敗しました",
+    "extractingDesc": "しばらくしてから再度お試しください",
+    "translating": "翻訳に失敗しました",
+    "translatingDesc": "翻訳中にエラーが発生しました。もう一度お試しください",
+    "translationError": "翻訳に失敗しました",
+    "improving": "改善に失敗しました",
+    "improvingDesc": "改善処理中にエラーが発生しました。もう一度お試しください",
+    "speechNotSupported": "音声認識を利用できません",
+    "speechNotSupportedDesc": "お使いのブラウザは音声認識に対応していません",
+    "speechRecognition": "音声認識エラー",
+    "videoProcessing": "動画の処理に失敗しました",
+    "videoRecognition": "動画認識エラー",
+    "invalidFileType": "無効なファイル形式です",
+    "invalidFileTypeDesc": "PDF、Word、または画像ファイルをアップロードしてください",
+    "fileProcessing": "ファイルの処理に失敗しました",
+    "fileProcessingDesc": "ファイルの処理中にエラーが発生しました。もう一度お試しください",
+    "onlyPDF": "PDF のみ対応しています",
+    "fileTooLarge": "ファイルが大きすぎます",
+    "fileTooLargeDesc": "動画ファイルは 100MB 以下にしてください",
+    "videoUploadFailed": "動画のアップロードに失敗しました",
+    "videoUploadFailedDesc": "ネットワークを確認するか、より小さい動画で再度お試しください",
+    "serverUploadLimit": "サーバーアップロード制限",
+    "serverUploadLimitDesc": "1 ファイルあたり最大 10MB です。動画を圧縮するか分割してください",
+    "invalidPDFFile": "無効な PDF ファイルです",
+    "videoServiceNotSupported": "この動画サービスには対応していません",
+    "taskProcessingFailed": "タスクの処理に失敗しました",
+    "taskProcessingTimeout": "タスクの処理がタイムアウトしました",
+    "boundaryTitle": "問題が発生しました",
+    "boundaryDescription": "予期しないエラーです。再試行するか、ホームに戻ってください。",
+    "retryButton": "再試行",
+    "homeButton": "ホームへ",
+    "default": "エラーが発生しました"
+  },
+  "errors": {
+    "image": {
+      "title": "画像認識に失敗しました",
+      "desc": "しばらくしてから再度お試しください"
+    },
+    "pdf": {
+      "title": "PDF の処理に失敗しました",
+      "desc": "しばらくしてから再度お試しください"
+    },
+    "text": {
+      "title": "翻訳に失敗しました",
+      "desc": "しばらくしてから再度お試しください"
+    },
+    "speech": {
+      "title": "音声認識に失敗しました",
+      "desc": "しばらくしてから再度お試しください"
+    },
+    "video": {
+      "title": "動画の処理に失敗しました",
+      "desc": "しばらくしてから再度お試しください"
+    },
+    "extract": {
+      "extractingError": "テキストの抽出に失敗しました",
+      "extractingDesc": "しばらくしてから再度お試しください"
+    },
+    "noLanguage": "翻訳先の言語がありません",
+    "noLanguageDesc": "翻訳先の言語を選択してください",
+    "noTranslation": "翻訳がありません",
+    "noTranslationDesc": "先に翻訳を実行してください",
+    "translationError": "翻訳に失敗しました",
+    "translationDesc": "翻訳中にエラーが発生しました。もう一度お試しください",
+    "improvementError": "改善に失敗しました",
+    "improvementDesc": "改善処理中にエラーが発生しました。もう一度お試しください",
+    "speechNotSupported": "音声認識を利用できません",
+    "speechNotSupportedDesc": "お使いのブラウザは音声認識に対応していません",
+    "invalidFile": "無効なファイルです",
+    "invalidFileDesc": "有効なファイルを選択してください",
+    "authRequired": "認証が必要です",
+    "pleaseLogin": "この機能を使うにはログインしてください",
+    "cancelButton": "キャンセル",
+    "registerButton": "登録",
+    "loginButton": "ログイン"
+  },
+  "console": {
+    "quotaFetchFailed": "クォータの取得に失敗:",
+    "quotaInfoFetchFailed": "クォータ情報の取得に失敗:",
+    "usageUpdateFailed": "利用回数の更新に失敗:",
+    "videoTaskCreateFailed": "動画認識タスクの作成に失敗:",
+    "ocrProcessingError": "OCR 結果の処理中にエラー:",
+    "videoUploadError": "動画アップロードエラー:",
+    "videoProcessingError": "動画処理エラー:",
+    "fileProcessingFailed": "ファイル処理に失敗:",
+    "translationServiceError": "{0} 翻訳サービスエラー:",
+    "usingFallbackService": "代替として DeepSeek を試しています…",
+    "translationError": "翻訳エラー:",
+    "fileProcessingError": "ファイル処理エラー:",
+    "taskQueryFailed": "タスク結果の取得に失敗:",
+    "pollingResult": "ポーリング結果:",
+    "startingPdfProcessing": "{0} で PDF を処理開始:",
+    "pdfProcessingStatus": "PDF 処理ステータス:",
+    "pdfProcessingComplete": "PDF 処理完了、抽出テキスト長:",
+    "extractedTextPreview": "抽出テキストのプレビュー:",
+    "videoFramesExtracting": "動画フレームの抽出を開始…",
+    "videoFramesExtracted": "フレーム抽出完了、枚数: {0}",
+    "videoFramesExample": "先頭フレームの例: {0}",
+    "videoProcessed": "動画処理完了、抽出テキスト長: {0}",
+    "videoUploaded": "動画アップロード成功、URL: {0}",
+    "videoTaskPolling": "タスク状態のポーリングを開始…",
+    "videoOcrProcessing": "OCR 結果の処理を開始:",
+    "videoOcrResult": "抽出テキスト: {0}",
+    "videoNoText": "テキストを抽出できませんでした",
+    "videoOcrError": "OCR 結果の処理中にエラー:",
+    "videoTaskResult": "ポーリング結果:",
+    "videoTaskFailed": "タスクの処理に失敗しました",
+    "videoTaskQueryFailed": "タスク結果の取得に失敗:",
+    "videoTaskTimeout": "タスク処理がタイムアウトしました",
+    "pdfProcessing": "{0} で PDF を処理: {1}",
+    "pdfStatus": "PDF 処理ステータス: {0}",
+    "pdfProcessed": "PDF 処理完了、抽出テキスト長: {0}",
+    "pdfPreview": "抽出テキストのプレビュー: {0}…",
+    "tryingDeepSeek": "代替として DeepSeek を試しています…",
+    "selectedLanguage": "選択した言語: {0}"
+  },
+  "success": {
+    "extracted": "テキストを抽出しました",
+    "translated": "翻訳が完了しました",
+    "improved": "改善が完了しました",
+    "speechRecognized": "音声を認識しました",
+    "videoExtracted": "動画からテキストを抽出しました",
+    "description": "処理が完了しました",
+    "fileExtracted": "ファイル内容を抽出しました",
+    "copied": "コピーしました",
+    "imageUploaded": "画像をアップロードしました",
+    "audioRecognized": "音声を認識しました",
+    "audioUploaded": "音声をアップロードしました"
+  },
+  "selectService": "翻訳サービスを選択",
+  "selectOcrService": "文字認識サービスを選択",
+  "processing": "処理中…",
+  "appName": "AI 翻訳アシスタント",
+  "switchLanguage": "言語を切り替え",
+  "toggleTheme": "テーマを切り替え",
+  "theme": {
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システムに合わせる"
+  },
+  "languages": {
+    "english": "English",
+    "chinese": "中文",
+    "japanese": "日本語",
+    "spanish": "Español"
+  },
+  "selectAsrService": "音声認識サービスを選択",
+  "asrServices": {
+    "tencent": "Tencent Cloud"
+  },
+  "enterText": "翻訳するテキストを入力",
+  "chooseFile": "ファイルを選択",
+  "uploadFile": "ファイルをアップロード",
+  "fileRecognition": "ファイル認識",
+  "uploadPDF": "PDF をアップロード",
+  "selectVideoService": "動画サービスを選択",
+  "videoServices": {
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "qwen": "Qwen",
+    "kimi": "Kimi"
+  },
+  "ocrServices": {
+    "tencent": "Tencent Cloud",
+    "qwen": "Qwen",
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "kimi": "Kimi",
+    "step": "StepFun AI"
+  },
+  "translationServices": {
+    "deepseek": "DeepSeek",
+    "qwen": "Qwen",
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "hunyuan": "Tencent Hunyuan",
+    "4o-mini": "OpenAI",
+    "minimax": "MiniMax",
+    "siliconflow": "Llama-3.3",
+    "claude": "Claude",
+    "kimi": "Kimi",
+    "step": "StepFun AI"
+  },
+  "title": "AI 翻訳アシスタント",
+  "description": "AI による高品質な多言語翻訳サービス",
+  "landing": {
+    "hero": {
+      "appTitle": "AI 翻訳アシスタント",
+      "subtitle": "テキスト・画像・PDF・音声・動画に対応したオールインワンの多言語翻訳",
+      "cta": "今すぐ試す",
+      "badge": "AI 搭載 · 多言語対応",
+      "subscribe": "プランを見る"
+    },
+    "features": {
+      "title": "主な機能",
+      "subtitle": "テキストから動画まで、ひとつのツールで",
+      "text": {
+        "title": "テキスト翻訳",
+        "description": "長文・多言語に対応。自然で正確な訳文。ログインでテキスト翻訳は無制限"
+      },
+      "image": {
+        "title": "画像翻訳",
+        "description": "スクリーンショットや写真・ポスターの文字をワンクリックで認識・翻訳"
+      },
+      "pdf": {
+        "title": "PDF 翻訳",
+        "description": "全文を抽出して翻訳。レイアウトや段落をできるだけ保持"
+      },
+      "speech": {
+        "title": "音声翻訳",
+        "description": "話しながら翻訳、または音声ファイルをアップロード。会議や学習に"
+      },
+      "video": {
+        "title": "動画翻訳",
+        "description": "画面上の文字と音声からテキストを抽出し翻訳。学習や制作に活用"
+      }
+    },
+    "highlights": {
+      "title": "特長",
+      "subtitle": "ブラウザだけでアップロードから翻訳まで。アプリのインストールは不要でスマホも PC も",
+      "multilingual": {
+        "title": "多言語対応",
+        "description": "UI は中国語・英語・日本語・スペイン語。翻訳は主要言語の組み合わせに対応"
+      },
+      "theme": {
+        "title": "テーマ切り替え",
+        "description": "ダーク／ライトを切り替え、昼夜どちらでも見やすく"
+      },
+      "privacy": {
+        "title": "プライバシー",
+        "description": "翻訳内容やファイルを自社サーバーに長期保存しません。サービス提供に第三者 AI が関与する場合があります"
+      },
+      "web": {
+        "title": "ブラウザで完結",
+        "description": "インストール不要。スマートフォンと PC の両方で利用可能"
+      }
+    },
+    "steps": {
+      "title": "使い方",
+      "subtitle": "モードを選び、コンテンツを入れて、結果を確認。ブラウザ内で完結",
+      "select": {
+        "title": "機能を選ぶ",
+        "description": "テキスト・画像・PDF・音声・動画から、内容に合わせて選択"
+      },
+      "upload": {
+        "title": "コンテンツを入れる",
+        "description": "ファイルをアップロード、テキスト入力、音声・動画は案内に従って提出"
+      },
+      "translate": {
+        "title": "結果を得る",
+        "description": "結果を確認してコピー。言語の向きやモデルは必要に応じて調整"
+      }
+    },
+    "testimonials": {
+      "title": "言語をまたいで働く人から",
+      "subtitle": "翻訳者・学生・チームからの、実際の使い方メモです。",
+      "1": {
+        "quote": "画面キャプチャや UI 文言が多い仕事です。以前は文字起こしに半日、今は同じ画面のなかで初稿まで進められます。",
+        "author": "川村 悠真",
+        "role": "ローカライズフリーランス"
+      },
+      "2": {
+        "quote": "迷わない導線で助かります。締切前の夜はダークモード固定。小さなことですが続けやすいです。",
+        "author": "宮下 詩織",
+        "role": "コンテンツマーケター"
+      },
+      "3": {
+        "quote": "二言語の論文 PDF がボトルネックでした。下訳として十分読めて、引用は自分で整えればよいので前に進めます。",
+        "author": "石井 瑛斗",
+        "role": "大学院生"
+      },
+      "4": {
+        "quote": "テキスト・画像・PDF をタブ切り替えなしで扱えるのが楽。トーンを変えたいときだけモデルを替えています。",
+        "author": "岩佐 隼人",
+        "role": "プロダクトオペレーション"
+      },
+      "5": {
+        "quote": "海外からのボイスメモが溜まりがちでした。文字起こしと翻訳をつなげて、当日中に返信できることが増えました。",
+        "author": "白石 真奈",
+        "role": "貿易実務"
+      },
+      "6": {
+        "quote": "ラフカットに言語が混ざる素材から、セリフを抜いて訳し、メモに戻す流れがスムーズ。以前より止まりが少ないです。",
+        "author": "吉田 海斗",
+        "role": "映像編集者"
+      }
+    },
+    "footer": {
+      "browsers": "主要ブラウザに対応",
+      "privacy": "お客様のプライバシーを大切にします"
+    }
+  },
+  "translate": {
+    "selectVideoService": "動画サービスを選択",
+    "videoService": "動画認識サービス",
+    "zhipu": "Z.AI",
+    "aliyun": "Alibaba Cloud",
+    "uploadVideo": "動画をアップロード",
+    "dragAndDrop": "動画をここにドラッグするか、クリックしてアップロード",
+    "processing": "動画を処理中…",
+    "extractedText": "抽出したテキスト",
+    "success": {
+      "copied": "コピーしました",
+      "description": "クリップボードにコピーしました"
+    }
+  },
+  "banner": {
+    "text": "AI 翻訳アシスタントを公開しました。期間限定の無料体験実施中。最新情報は X をご覧ください",
+    "twitter": "https://x.com/"
+  },
+  "usage": {
+    "remainingToday": "本日の残り: {0}/{1}",
+    "remainingThisMonth": "今月の残り: {0}/{1}",
+    "textTranslation": "テキスト翻訳",
+    "imageRecognition": "画像認識",
+    "pdfRecognition": "PDF 認識",
+    "speechRecognition": "音声認識",
+    "videoRecognition": "動画認識",
+    "dailyLimit": "1 日の無料回数",
+    "loginToGet": "ログインでさらに機能を利用できます",
+    "unlimited": "テキスト翻訳は無制限"
+  },
+  "auth": {
+    "signIn": "ログイン",
+    "signUp": "登録",
+    "profileButton": "プロフィール",
+    "profile": {
+      "title": "プロフィール",
+      "description": "アカウント情報と利用クォータを確認できます",
+      "basicInfo": {
+        "title": "基本情報",
+        "email": "メールアドレス",
+        "username": "ユーザー名",
+        "userId": "ユーザー ID",
+        "registerTime": "登録日時",
+        "editUsername": {
+          "placeholder": "新しいユーザー名を入力",
+          "save": "保存",
+          "cancel": "キャンセル",
+          "success": "ユーザー名を更新しました",
+          "error": {
+            "empty": "ユーザー名を入力してください",
+            "failed": "更新に失敗しました。もう一度お試しください"
+          }
+        },
+        "social": {
+          "github": "GitHub",
+          "google": "Google",
+          "bound": "連携済み",
+          "unbound": "未連携",
+          "bind": "{provider} と連携",
+          "bindFailed": "{provider} の連携に失敗しました"
+        }
+      },
+      "subscription": {
+        "title": "サブスクリプション",
+        "plan": {
+          "trial": "無料プラン",
+          "monthly": "月額プラン",
+          "yearly": "年額プラン"
+        },
+        "customerId": "顧客 ID",
+        "subscriptionId": "サブスクリプション ID",
+        "expiryDate": "有効期限: {date}",
+        "success": "ご購読ありがとうございます",
+        "quota": {
+          "text": "テキスト翻訳",
+          "image": "画像認識",
+          "pdf": "PDF 認識",
+          "speech": "音声認識",
+          "video": "動画認識",
+          "unlimited": "無制限",
+          "usage": "{used}/{quota}"
+        },
+        "dialog": {
+          "title": "プレミアムにアップグレード",
+          "description": "より多くの回数と快適な翻訳体験をプレミアムで。",
+          "benefits": {
+            "title": "プレミアムの特典:",
+            "imageQuota": "画像認識 1 日 50 回",
+            "pdfQuota": "PDF 処理 1 日 40 回",
+            "speechQuota": "音声認識 1 日 30 回",
+            "videoQuota": "動画処理 1 日 10 回",
+            "priority": "優先処理キュー"
+          },
+          "buttons": {
+            "cancel": "あとで",
+            "viewPlans": "プランを見る"
+          }
+        }
+      }
+    },
+    "signOut": {
+      "action": "ログアウト",
+      "success": "ログアウトしました",
+      "error": "ログアウトに失敗しました"
+    },
+    "login": {
+      "title": "ログイン",
+      "subtitle": "メールアドレスとパスワードを入力してください",
+      "email": "メールアドレス",
+      "emailPlaceholder": "メールアドレスを入力",
+      "password": "パスワード",
+      "passwordPlaceholder": "パスワードを入力",
+      "button": "ログイン",
+      "loading": "ログイン中…",
+      "noAccount": "アカウントをお持ちでないですか？",
+      "error": {
+        "invalidCredentials": "メールまたはパスワードが正しくありません",
+        "required": "メールとパスワードを入力してください"
+      },
+      "github": "GitHub でログイン",
+      "or": "または",
+      "google": "Google でログイン"
+    },
+    "register": {
+      "title": "登録",
+      "subtitle": "アカウントを作成",
+      "email": "メールアドレス",
+      "emailPlaceholder": "メールアドレスを入力",
+      "password": "パスワード",
+      "passwordPlaceholder": "パスワードを入力",
+      "confirmPassword": "パスワード（確認）",
+      "confirmPasswordPlaceholder": "もう一度パスワードを入力",
+      "button": "登録",
+      "loading": "登録中…",
+      "hasAccount": "すでにアカウントをお持ちですか？",
+      "error": {
+        "passwordMismatch": "パスワードが一致しません",
+        "emailExists": "このメールアドレスは既に登録されています",
+        "required": "必須項目を入力してください"
+      },
+      "github": "GitHub で登録",
+      "or": "または",
+      "success": "登録が完了しました",
+      "google": "Google で登録"
+    },
+    "error": {
+      "notLoggedIn": "先にログインしてください",
+      "accessDenied": "アクセスが拒否されました。もう一度お試しください",
+      "default": "ログイン中にエラーが発生しました"
+    }
+  },
+  "quota": {
+    "types": {
+      "text": "テキスト翻訳",
+      "image": "画像認識",
+      "pdf": "PDF 認識",
+      "speech": "音声認識",
+      "video": "動画認識"
+    },
+    "unlimited": "無制限",
+    "times": "回",
+    "remaining": "残り: %{count}",
+    "errors": {
+      "notLoggedIn": "先にログインしてください",
+      "userNotFound": "ユーザーが見つかりません",
+      "invalidType": "無効な利用種別です",
+      "limitReached": "本日の利用回数の上限に達しました",
+      "recordFailed": "利用の記録に失敗しました",
+      "checkFailed": "クォータの確認に失敗しました"
+    }
+  },
+  "pricing": {
+    "title": "料金プラン",
+    "subtitle": "あなたに合ったプランで、快適な翻訳体験を",
+    "tiers": {
+      "free": {
+        "name": "トライアル",
+        "description": "基本機能をお試し",
+        "cta": "トライアルを始める",
+        "features": {
+          "basic": [
+            "テキスト翻訳は無制限",
+            "画像認識 月 5 回",
+            "PDF 処理 月 3 回"
+          ],
+          "freeAdvanced": [
+            "音声認識 月 2 回",
+            "動画処理 月 1 回"
+          ],
+          "freeSupport": [
+            "基本的なサポート"
+          ]
+        }
+      },
+      "monthly": {
+        "name": "月額プラン",
+        "description": "個人の日常利用に",
+        "cta": "今すぐ購読",
+        "period": "月",
+        "features": {
+          "basic": [
+            "テキスト翻訳は無制限",
+            "画像認識 1 日 50 回",
+            "PDF 処理 1 日 40 回"
+          ],
+          "advanced": [
+            "音声認識 1 日 30 回",
+            "動画処理 1 日 10 回",
+            "優先処理キュー"
+          ],
+          "support": [
+            "優先サポート"
+          ]
+        }
+      },
+      "yearly": {
+        "name": "年額プラン",
+        "description": "最もお得なプラン",
+        "cta": "今すぐ購読",
+        "recommended": "おすすめ",
+        "discount": "約 17% お得",
+        "features": {
+          "basic": [
+            "テキスト翻訳は無制限",
+            "画像認識 1 日 100 回",
+            "PDF 処理 1 日 80 回"
+          ],
+          "advanced": [
+            "音声認識 1 日 60 回",
+            "動画処理 1 日 20 回",
+            "優先処理キュー"
+          ],
+          "support": [
+            "24 時間サポート",
+            "高度な API アクセス（準備中）"
+          ]
+        }
+      }
+    },
+    "features": {
+      "basic": "基本機能",
+      "advanced": "高度な機能",
+      "support": "サポート"
+    },
+    "monthly": "月",
+    "yearly": "年",
+    "faq": {
+      "title": "よくある質問",
+      "subtitle": "その他のご質問はお問い合わせください",
+      "cards": {
+        "security": {
+          "title": "データの安全とプライバシー",
+          "content": "処理完了後、当社サーバーに翻訳内容やアップロードファイルを長期保存しません。サービス提供のため、第三者の AI プロバイダーに内容が送信される場合があります。詳細はプライバシーポリシーをご覧ください。"
+        },
+        "quota": {
+          "title": "クォータの集計とリセットは？",
+          "content": "無料枠: 画像・PDF・音声・動画は暦月ごと、毎月 1 日にリセット。繰り越しはありません。有料枠: 暦日ごと、0 時にリセット。繰り越しはありません。"
+        },
+        "payment": {
+          "title": "支払い方法は？",
+          "content": "Stripe を利用し、主要なクレジット・デビットカードに対応します。カード番号などの詳細は当社では保持しません。"
+        },
+        "support": {
+          "title": "サポートへの連絡方法は？",
+          "content": "購読・クォータ・使い方については hello@translation.ai までメールでご連絡ください。"
+        }
+      },
+      "fullPrivacyLink": "プライバシーポリシー全文"
+    }
+  },
+  "privacy": {
+    "title": "プライバシーポリシー",
+    "updated": "最終更新：2026年4月12日",
+    "backToPricing": "料金プランに戻る",
+    "s1h": "概要",
+    "s1p": "Translation Ai（「当社」）は、本翻訳・コンテンツ処理サービスを提供します。本ポリシーは、どのような情報が関与し、どのように取り扱うかを説明します。",
+    "s2h": "取り扱う情報",
+    "s2p": "• アカウント：登録または GitHub／Google ログイン時に、メール、表示名、認証に必要なデータを処理します。\n\n• 利用状況：プランとクォータの適用のため、機能の利用状況を記録します。\n\n• お客様が送信するコンテンツ：テキスト、画像、文書、音声、動画は、翻訳・OCR・音声・動画機能の提供のために処理されます。本製品用の独自モデルの学習にコンテンツを使用しません。",
+    "s3h": "第三者サービス",
+    "s3p": "サービス提供には、ホスティング事業者、各種 AI モデル API、決済の Stripe へデータ（お客様のコンテンツを含む場合があります）を送信する必要があります。各当事者は自らの利用規約とプライバシーポリシーに従って処理します。完全なカード番号は当社で保存しません。",
+    "s4h": "保存と保持",
+    "s4p": "処理完了後、翻訳の入力・出力を当社システムに保持する意図はありません。サービス運営および法的義務のために必要な範囲で、アカウント、請求、サブスクリプション、限定的な運用・セキュリティログを保持する場合があります。",
+    "s5h": "セキュリティ",
+    "s5p": "HTTPS および合理的なアクセス制御を用います。オンラインサービスに完全な安全性は保証できません。",
+    "s6h": "お問い合わせ",
+    "s6p": "プライバシーに関するお問い合わせ：hello@translation.ai"
+  },
+  "nav": {
+    "home": "ホーム",
+    "features": "機能",
+    "pricing": "料金",
+    "privacy": "プライバシー"
+  },
+  "processingStatus": "処理中…"
+}
