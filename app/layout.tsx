@@ -76,12 +76,13 @@ function htmlLangFromHeader(locale: string | null): string {
   return 'en';
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const headerLocale = headers().get('x-next-locale');
+  const headerStore = await headers();
+  const headerLocale = headerStore.get('x-next-locale');
   const htmlLang = htmlLangFromHeader(headerLocale);
   const base = getSiteUrl();
   const jsonLd = {
