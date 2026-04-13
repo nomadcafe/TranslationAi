@@ -5,10 +5,11 @@ import { localizedCanonicalPath, marketingHreflangAlternates } from '@/lib/i18n/
 export async function generateMetadata({
   params,
 }: {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }): Promise<Metadata> {
-  if (!isAppLocale(params.locale)) return {}
-  const locale = params.locale as AppLocale
+  const { locale: localeParam } = await params
+  if (!isAppLocale(localeParam)) return {}
+  const locale = localeParam as AppLocale
   const canonical = localizedCanonicalPath(locale, 'privacy')
   return {
     title: 'Privacy',

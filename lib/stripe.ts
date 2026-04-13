@@ -3,7 +3,6 @@ import Stripe from 'stripe'
 // Server-side Stripe client.
 export const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      // @ts-expect-error Stripe SDK typings may trail dashboard API versions
       apiVersion: '2025-02-24.acacia',
       typescript: true,
     })

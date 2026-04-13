@@ -19,7 +19,7 @@ async function sha256(message: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function hmacSha256(key: ArrayBuffer, message: string): Promise<ArrayBuffer> {
+async function hmacSha256(key: BufferSource, message: string): Promise<ArrayBuffer> {
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
     key,
