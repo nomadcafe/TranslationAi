@@ -12,7 +12,6 @@ import {
   useLoginHref,
   useMarketingHomeHref,
   useMarketingPricingHref,
-  useMarketingPrivacyHref,
   useProfileHref,
   useRegisterHref,
   useSwitchLocaleNav,
@@ -37,7 +36,6 @@ export function Header() {
   const router = useRouter()
   const homeHref = useMarketingHomeHref()
   const pricingHref = useMarketingPricingHref()
-  const privacyHref = useMarketingPrivacyHref()
   const translateHref = useTranslateHref()
   const loginHref = useLoginHref()
   const registerHref = useRegisterHref()
@@ -92,9 +90,6 @@ export function Header() {
           </Link>
           <Link href={pricingHref} className="text-base font-medium hover:text-primary transition-colors">
             {t('nav.pricing')}
-          </Link>
-          <Link href={privacyHref} className="text-base font-medium hover:text-primary transition-colors">
-            {t('nav.privacy')}
           </Link>
         </nav>
 
