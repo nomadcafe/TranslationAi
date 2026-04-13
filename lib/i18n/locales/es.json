@@ -1,0 +1,658 @@
+{
+  "loading": "Procesando…",
+  "uploadFailed": "Error al subir el archivo",
+  "tabs": {
+    "image": "Reconocimiento de imagen",
+    "speech": "Reconocimiento de voz",
+    "text": "Traducción de texto",
+    "video": "Reconocimiento de vídeo",
+    "file": "Reconocimiento de archivos",
+    "pdf": "Reconocimiento PDF"
+  },
+  "buttons": {
+    "getStarted": "Empezar",
+    "startTranslate": "Traducir"
+  },
+  "uploadImage": "Subir imagen",
+  "uploadAudio": "Subir audio",
+  "uploadVideo": "Subir vídeo",
+  "dropHere": "Suelta para subir",
+  "dragAndDrop": "Arrastra la imagen aquí o haz clic para elegir archivo",
+  "dragAndDropPDF": "Arrastra el PDF aquí o haz clic para elegir archivo",
+  "extractAction": "Extraer texto",
+  "extractingStatus": "Extrayendo…",
+  "targetLanguage": "Idioma de destino",
+  "selectPDFService": "Servicio de procesamiento PDF",
+  "serviceProvider": "Elegir servicio",
+  "translateAction": "Traducir",
+  "translating": "Traduciendo…",
+  "improveTranslation": "Mejorar",
+  "improveTooltip": "Usa IA para mejorar la traducción",
+  "extractedText": "Texto extraído",
+  "translatedText": "Resultado de la traducción",
+  "noTextExtracted": "Aún no hay texto extraído",
+  "noTranslation": "Aún sin traducir",
+  "startListening": "Grabar y transcribir",
+  "stopListening": "Detener grabación",
+  "selectImage": "Elegir imagen",
+  "selectPDF": "Elegir archivo PDF",
+  "error": {
+    "authRequired": "Inicio de sesión requerido",
+    "pleaseLogin": "Inicia sesión para usar esta función",
+    "cancelButton": "Cancelar",
+    "registerButton": "Registrarse",
+    "loginButton": "Iniciar sesión",
+    "usageLimitExceeded": "Límite de uso alcanzado",
+    "textLimitExceededDesc": "Has alcanzado el límite diario de traducción de texto",
+    "imageLimitExceededDesc": "Has agotado el reconocimiento de imágenes de hoy. Vuelve mañana",
+    "pdfLimitExceededDesc": "Has agotado el reconocimiento PDF de hoy. Vuelve mañana",
+    "speechLimitExceededDesc": "Has agotado el reconocimiento de voz de hoy. Vuelve mañana",
+    "videoLimitExceededDesc": "Has agotado el reconocimiento de vídeo de hoy. Vuelve mañana",
+    "invalidImageFile": "Archivo de imagen no válido",
+    "invalidImageFileDesc": "Selecciona un archivo de imagen válido",
+    "invalidFile": "Archivo no válido",
+    "invalidFileDesc": "Sube un archivo de imagen",
+    "invalidAudioFile": "Archivo de audio no válido",
+    "invalidAudioFileDesc": "Selecciona un archivo de audio válido",
+    "audioRecognition": "Error al reconocer el audio",
+    "audioProcessing": "Error al procesar el audio",
+    "invalidVideoFile": "Archivo de vídeo no válido",
+    "invalidVideoFileDesc": "Sube un archivo de vídeo",
+    "videoProcessingDesc": "Error al procesar el vídeo. Inténtalo de nuevo",
+    "noTextExtracted": "No se extrajo texto",
+    "noTextExtractedDesc": "No se pudo extraer texto del archivo",
+    "noImage": "No hay imagen seleccionada",
+    "noImageDesc": "Sube una imagen primero",
+    "noText": "No hay texto",
+    "noTextDesc": "Introduce el texto a traducir",
+    "noLanguage": "No hay idioma seleccionado",
+    "noLanguageDesc": "Selecciona el idioma de destino",
+    "noTranslation": "Sin traducción",
+    "noTranslationDesc": "Traduce primero",
+    "extractingError": "Error al extraer texto",
+    "extractingDesc": "Inténtalo de nuevo más tarde",
+    "translating": "Error en la traducción",
+    "translatingDesc": "Ocurrió un error al traducir. Inténtalo de nuevo",
+    "translationError": "Error en la traducción",
+    "improving": "Error al mejorar",
+    "improvingDesc": "Ocurrió un error al mejorar el texto. Inténtalo de nuevo",
+    "speechNotSupported": "Reconocimiento de voz no disponible",
+    "speechNotSupportedDesc": "Tu navegador no admite reconocimiento de voz",
+    "speechRecognition": "Error de reconocimiento de voz",
+    "videoProcessing": "Error al procesar el vídeo",
+    "videoRecognition": "Error de reconocimiento de vídeo",
+    "invalidFileType": "Tipo de archivo no válido",
+    "invalidFileTypeDesc": "Sube un PDF, Word o imagen",
+    "fileProcessing": "Error al procesar el archivo",
+    "fileProcessingDesc": "Ocurrió un error al procesar el archivo. Inténtalo de nuevo",
+    "onlyPDF": "Solo se admiten archivos PDF",
+    "fileTooLarge": "Archivo demasiado grande",
+    "fileTooLargeDesc": "El vídeo no puede superar los 100 MB",
+    "videoUploadFailed": "Error al subir el vídeo",
+    "videoUploadFailedDesc": "Comprueba la red o prueba con un vídeo más pequeño",
+    "serverUploadLimit": "Límite de subida del servidor",
+    "serverUploadLimitDesc": "Máximo 10 MB por archivo. Comprime el vídeo o divídelo",
+    "invalidPDFFile": "Archivo PDF no válido",
+    "videoServiceNotSupported": "Servicio de vídeo no compatible",
+    "taskProcessingFailed": "Error al procesar la tarea",
+    "taskProcessingTimeout": "Tiempo de espera de la tarea agotado",
+    "boundaryTitle": "Algo salió mal",
+    "boundaryDescription": "Ocurrió un error inesperado. Vuelve a intentarlo o regresa al inicio.",
+    "retryButton": "Reintentar",
+    "homeButton": "Volver al inicio",
+    "default": "Se produjo un error"
+  },
+  "errors": {
+    "image": {
+      "title": "Error en el reconocimiento de imagen",
+      "desc": "Inténtalo de nuevo más tarde"
+    },
+    "pdf": {
+      "title": "Error al procesar el PDF",
+      "desc": "Inténtalo de nuevo más tarde"
+    },
+    "text": {
+      "title": "Error en la traducción",
+      "desc": "Inténtalo de nuevo más tarde"
+    },
+    "speech": {
+      "title": "Error en el reconocimiento de voz",
+      "desc": "Inténtalo de nuevo más tarde"
+    },
+    "video": {
+      "title": "Error al procesar el vídeo",
+      "desc": "Inténtalo de nuevo más tarde"
+    },
+    "extract": {
+      "extractingError": "Error al extraer texto",
+      "extractingDesc": "Inténtalo de nuevo más tarde"
+    },
+    "noLanguage": "Falta el idioma de destino",
+    "noLanguageDesc": "Selecciona un idioma de destino",
+    "noTranslation": "Sin traducción",
+    "noTranslationDesc": "Traduce primero",
+    "translationError": "Error en la traducción",
+    "translationDesc": "Ocurrió un error al traducir. Inténtalo de nuevo",
+    "improvementError": "Error al mejorar",
+    "improvementDesc": "Ocurrió un error al mejorar. Inténtalo de nuevo",
+    "speechNotSupported": "Reconocimiento de voz no disponible",
+    "speechNotSupportedDesc": "Tu navegador no admite reconocimiento de voz",
+    "invalidFile": "Archivo no válido",
+    "invalidFileDesc": "Selecciona un archivo válido",
+    "authRequired": "Autenticación requerida",
+    "pleaseLogin": "Inicia sesión para usar esta función",
+    "cancelButton": "Cancelar",
+    "registerButton": "Registrarse",
+    "loginButton": "Iniciar sesión"
+  },
+  "console": {
+    "quotaFetchFailed": "Error al obtener la cuota:",
+    "quotaInfoFetchFailed": "Error al obtener la información de cuota:",
+    "usageUpdateFailed": "Error al actualizar el uso:",
+    "videoTaskCreateFailed": "Error al crear la tarea de vídeo:",
+    "ocrProcessingError": "Error al procesar el resultado OCR:",
+    "videoUploadError": "Error al subir el vídeo:",
+    "videoProcessingError": "Error al procesar el vídeo:",
+    "fileProcessingFailed": "Error al procesar el archivo:",
+    "translationServiceError": "Error del servicio de traducción {0}:",
+    "usingFallbackService": "Probando DeepSeek como respaldo…",
+    "translationError": "Error de traducción:",
+    "fileProcessingError": "Error al procesar el archivo:",
+    "taskQueryFailed": "Error al consultar el resultado de la tarea:",
+    "pollingResult": "Resultado del sondeo:",
+    "startingPdfProcessing": "Iniciando procesamiento PDF con {0}:",
+    "pdfProcessingStatus": "Estado del PDF:",
+    "pdfProcessingComplete": "PDF listo, longitud del texto:",
+    "extractedTextPreview": "Vista previa del texto:",
+    "videoFramesExtracting": "Extrayendo fotogramas…",
+    "videoFramesExtracted": "Fotogramas extraídos: {0}",
+    "videoFramesExample": "Ejemplo del primer fotograma: {0}",
+    "videoProcessed": "Vídeo procesado, longitud del texto: {0}",
+    "videoUploaded": "Vídeo subido, URL: {0}",
+    "videoTaskPolling": "Consultando estado de la tarea…",
+    "videoOcrProcessing": "Procesando resultado OCR:",
+    "videoOcrResult": "Texto extraído: {0}",
+    "videoNoText": "No se extrajo texto",
+    "videoOcrError": "Error al procesar OCR:",
+    "videoTaskResult": "Resultado del sondeo:",
+    "videoTaskFailed": "La tarea falló",
+    "videoTaskQueryFailed": "Error al consultar la tarea:",
+    "videoTaskTimeout": "Tiempo de espera de la tarea agotado",
+    "pdfProcessing": "Procesando PDF con {0}: {1}",
+    "pdfStatus": "Estado del PDF: {0}",
+    "pdfProcessed": "PDF listo, longitud del texto: {0}",
+    "pdfPreview": "Vista previa: {0}…",
+    "tryingDeepSeek": "Probando DeepSeek como respaldo…",
+    "selectedLanguage": "Idioma seleccionado: {0}"
+  },
+  "success": {
+    "extracted": "Texto extraído correctamente",
+    "translated": "Traducción completada",
+    "improved": "Mejora completada",
+    "speechRecognized": "Voz reconocida correctamente",
+    "videoExtracted": "Texto del vídeo extraído",
+    "description": "Operación completada",
+    "fileExtracted": "Contenido del archivo extraído",
+    "copied": "Copiado",
+    "imageUploaded": "Imagen subida",
+    "audioRecognized": "Audio reconocido",
+    "audioUploaded": "Audio subido"
+  },
+  "selectService": "Elegir servicio de traducción",
+  "selectOcrService": "Elegir servicio OCR",
+  "processing": "Procesando…",
+  "appName": "Asistente de traducción IA",
+  "switchLanguage": "Cambiar idioma",
+  "toggleTheme": "Cambiar tema",
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  },
+  "languages": {
+    "english": "English",
+    "chinese": "中文",
+    "japanese": "日本語",
+    "spanish": "Español"
+  },
+  "selectAsrService": "Elegir servicio de reconocimiento de voz",
+  "asrServices": {
+    "tencent": "Tencent Cloud"
+  },
+  "enterText": "Escribe el texto a traducir",
+  "chooseFile": "Elegir archivo",
+  "uploadFile": "Subir archivo",
+  "fileRecognition": "Reconocimiento de archivos",
+  "uploadPDF": "Subir PDF",
+  "selectVideoService": "Elegir servicio de vídeo",
+  "videoServices": {
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "qwen": "Qwen",
+    "kimi": "Kimi"
+  },
+  "ocrServices": {
+    "tencent": "Tencent Cloud",
+    "qwen": "Qwen",
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "kimi": "Kimi",
+    "step": "StepFun AI"
+  },
+  "translationServices": {
+    "deepseek": "DeepSeek",
+    "qwen": "Qwen",
+    "gemini": "Gemini",
+    "zhipu": "Z.AI",
+    "hunyuan": "Tencent Hunyuan",
+    "4o-mini": "OpenAI",
+    "minimax": "MiniMax",
+    "siliconflow": "Llama-3.3",
+    "claude": "Claude",
+    "kimi": "Kimi",
+    "step": "StepFun AI"
+  },
+  "title": "Asistente de traducción IA",
+  "description": "Traducción multilingüe de alta calidad con IA",
+  "landing": {
+    "hero": {
+      "appTitle": "Asistente de traducción IA",
+      "subtitle": "Solución integral: texto, imagen, PDF, voz y vídeo",
+      "cta": "Empezar",
+      "badge": "Impulsado por IA · Multilingüe",
+      "subscribe": "Ver planes"
+    },
+    "features": {
+      "title": "Funciones principales",
+      "subtitle": "De texto a vídeo, una sola herramienta",
+      "text": {
+        "title": "Traducción de texto",
+        "description": "Textos largos y varios idiomas. Con inicio de sesión, traducción de texto ilimitada"
+      },
+      "image": {
+        "title": "Traducción de imágenes",
+        "description": "OCR y traducción en un clic desde capturas, fotos y carteles"
+      },
+      "pdf": {
+        "title": "Traducción PDF",
+        "description": "Extrae y traduce el documento completo conservando el diseño"
+      },
+      "speech": {
+        "title": "Traducción de voz",
+        "description": "Habla o sube audio; ideal para reuniones y estudio"
+      },
+      "video": {
+        "title": "Traducción de vídeo",
+        "description": "Extrae texto en pantalla y del audio; útil para aprender y crear contenido"
+      }
+    },
+    "highlights": {
+      "title": "Ventajas",
+      "subtitle": "Sube y traduce en el navegador y cambia de tipo de contenido sin instalar nada",
+      "multilingual": {
+        "title": "Multilingüe",
+        "description": "Interfaz en chino, inglés, japonés o español; traducción entre idiomas de uso frecuente"
+      },
+      "theme": {
+        "title": "Temas",
+        "description": "Modo claro y oscuro para usar de día o de noche"
+      },
+      "privacy": {
+        "title": "Privacidad",
+        "description": "No conservamos traducciones ni archivos de forma prolongada en nuestros servidores; prestar el servicio puede implicar proveedores de IA externos"
+      },
+      "web": {
+        "title": "Solo navegador",
+        "description": "Sin instalación; funciona en móvil y ordenador"
+      }
+    },
+    "steps": {
+      "title": "Cómo funciona",
+      "subtitle": "Elige el modo, añade contenido y revisa el resultado, todo en el navegador",
+      "select": {
+        "title": "Elige la función",
+        "description": "Traducción de texto, imagen, PDF, voz o vídeo según tu contenido"
+      },
+      "upload": {
+        "title": "Sube el contenido",
+        "description": "Sube archivos, pega texto o envía audio y vídeo siguiendo las indicaciones"
+      },
+      "translate": {
+        "title": "Obtén el resultado",
+        "description": "Revisa y copia la traducción; ajusta el par de idiomas o el modelo si hace falta"
+      }
+    },
+    "testimonials": {
+      "title": "Quienes trabajan entre idiomas",
+      "subtitle": "Notas breves de traductores, estudiantes y equipos: cómo usan Translation Ai en el día a día.",
+      "1": {
+        "quote": "Vivo entre capturas y cadenas de interfaz. Antes perdía medio día copiando texto de mockups; ahora itero el borrador en un solo flujo.",
+        "author": "Lucía Fernández",
+        "role": "Localizadora freelance"
+      },
+      "2": {
+        "quote": "Orden claro y siguientes pasos obvios. El modo oscuro para tirones nocturnos parece un detalle, pero suma.",
+        "author": "Miguel Soto",
+        "role": "Marketing de contenidos"
+      },
+      "3": {
+        "quote": "PDFs académicos en dos idiomas me frenaban. Saco un borrador usable y ajusto citas yo: suficiente para avanzar el trabajo.",
+        "author": "Valentina Ríos",
+        "role": "Investigadora en formación"
+      },
+      "4": {
+        "quote": "Texto, imagen y PDF en una pestaña mejor que tres sitios distintos. Cambio de modelo cuando importa el tono y sigo.",
+        "author": "Andrés Navarro",
+        "role": "Operaciones de producto"
+      },
+      "5": {
+        "quote": "Las notas de voz de socios en el extranjero se quedaban en carpeta. Transcripción más traducción en la misma rutina y respondo el mismo día.",
+        "author": "Sofía Herrera",
+        "role": "Coordinadora import–export"
+      },
+      "6": {
+        "quote": "Cortes con idiomas mezclados: saco diálogo, traduzco y vuelvo a mis notas. Menos arranques y paradas que antes.",
+        "author": "Mateo Silva",
+        "role": "Editor de vídeo"
+      }
+    },
+    "footer": {
+      "browsers": "Compatible con los principales navegadores",
+      "privacy": "Comprometidos con tu privacidad"
+    }
+  },
+  "translate": {
+    "selectVideoService": "Elegir servicio de vídeo",
+    "videoService": "Servicio de reconocimiento de vídeo",
+    "zhipu": "Z.AI",
+    "aliyun": "Alibaba Cloud",
+    "uploadVideo": "Subir vídeo",
+    "dragAndDrop": "Arrastra el vídeo aquí o haz clic para subir",
+    "processing": "Procesando vídeo…",
+    "extractedText": "Texto extraído",
+    "success": {
+      "copied": "Copiado",
+      "description": "Texto copiado al portapapeles"
+    }
+  },
+  "banner": {
+    "text": "Nuevo asistente de traducción IA con prueba gratuita por tiempo limitado. Novedades en X",
+    "twitter": "https://x.com/"
+  },
+  "usage": {
+    "remainingToday": "Restante hoy: {0}/{1}",
+    "remainingThisMonth": "Restante este mes: {0}/{1}",
+    "textTranslation": "Traducción de texto",
+    "imageRecognition": "Reconocimiento de imagen",
+    "pdfRecognition": "Reconocimiento PDF",
+    "speechRecognition": "Reconocimiento de voz",
+    "videoRecognition": "Reconocimiento de vídeo",
+    "dailyLimit": "Uso gratuito diario",
+    "loginToGet": "Inicia sesión para más funciones",
+    "unlimited": "Traducción de texto ilimitada"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse",
+    "profileButton": "Perfil",
+    "profile": {
+      "title": "Perfil",
+      "description": "Consulta tu cuenta y cuotas de uso",
+      "basicInfo": {
+        "title": "Información básica",
+        "email": "Correo",
+        "username": "Nombre de usuario",
+        "userId": "ID de usuario",
+        "registerTime": "Fecha de registro",
+        "editUsername": {
+          "placeholder": "Nuevo nombre de usuario",
+          "save": "Guardar",
+          "cancel": "Cancelar",
+          "success": "Nombre de usuario actualizado",
+          "error": {
+            "empty": "El nombre no puede estar vacío",
+            "failed": "Error al actualizar. Inténtalo de nuevo"
+          }
+        },
+        "social": {
+          "github": "GitHub",
+          "google": "Google",
+          "bound": "Conectado",
+          "unbound": "No conectado",
+          "bind": "Conectar {provider}",
+          "bindFailed": "Error al conectar {provider}"
+        }
+      },
+      "subscription": {
+        "title": "Suscripción",
+        "plan": {
+          "trial": "Gratis",
+          "monthly": "Mensual",
+          "yearly": "Anual"
+        },
+        "customerId": "ID de cliente",
+        "subscriptionId": "ID de suscripción",
+        "expiryDate": "Vence: {date}",
+        "success": "¡Suscripción correcta! Gracias por tu apoyo",
+        "quota": {
+          "text": "Traducción de texto",
+          "image": "Reconocimiento de imagen",
+          "pdf": "PDF",
+          "speech": "Reconocimiento de voz",
+          "video": "Vídeo",
+          "unlimited": "Ilimitado",
+          "usage": "{used}/{quota}"
+        },
+        "dialog": {
+          "title": "Pasarte a Premium",
+          "description": "Más uso diario y una experiencia más fluida con Premium.",
+          "benefits": {
+            "title": "Ventajas Premium:",
+            "imageQuota": "50 reconocimientos de imagen al día",
+            "pdfQuota": "40 procesamientos PDF al día",
+            "speechQuota": "30 reconocimientos de voz al día",
+            "videoQuota": "10 procesamientos de vídeo al día",
+            "priority": "Cola de procesamiento prioritaria"
+          },
+          "buttons": {
+            "cancel": "Ahora no",
+            "viewPlans": "Ver planes"
+          }
+        }
+      }
+    },
+    "signOut": {
+      "action": "Cerrar sesión",
+      "success": "Sesión cerrada",
+      "error": "Error al cerrar sesión"
+    },
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Introduce tu correo y contraseña",
+      "email": "Correo",
+      "emailPlaceholder": "Tu correo",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Tu contraseña",
+      "button": "Entrar",
+      "loading": "Entrando…",
+      "noAccount": "¿No tienes cuenta?",
+      "error": {
+        "invalidCredentials": "Correo o contraseña incorrectos",
+        "required": "Introduce correo y contraseña"
+      },
+      "github": "Continuar con GitHub",
+      "or": "o",
+      "google": "Continuar con Google"
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "subtitle": "Regístrate",
+      "email": "Correo",
+      "emailPlaceholder": "Tu correo",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Tu contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "Repite la contraseña",
+      "button": "Registrarse",
+      "loading": "Registrando…",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "error": {
+        "passwordMismatch": "Las contraseñas no coinciden",
+        "emailExists": "Este correo ya está registrado",
+        "required": "Completa todos los campos obligatorios"
+      },
+      "github": "Registrarse con GitHub",
+      "or": "o",
+      "success": "Registro completado",
+      "google": "Registrarse con Google"
+    },
+    "error": {
+      "notLoggedIn": "Inicia sesión primero",
+      "accessDenied": "Acceso denegado. Inténtalo de nuevo",
+      "default": "Error al iniciar sesión"
+    }
+  },
+  "quota": {
+    "types": {
+      "text": "Traducción de texto",
+      "image": "Reconocimiento de imagen",
+      "pdf": "PDF",
+      "speech": "Reconocimiento de voz",
+      "video": "Reconocimiento de vídeo"
+    },
+    "unlimited": "Ilimitado",
+    "times": "veces",
+    "remaining": "Restante: %{count}",
+    "errors": {
+      "notLoggedIn": "Inicia sesión primero",
+      "userNotFound": "Usuario no encontrado",
+      "invalidType": "Tipo de uso no válido",
+      "limitReached": "Límite diario alcanzado",
+      "recordFailed": "No se pudo registrar el uso",
+      "checkFailed": "No se pudo comprobar la cuota"
+    }
+  },
+  "pricing": {
+    "title": "Planes y precios",
+    "subtitle": "Elige el plan que mejor te encaje",
+    "tiers": {
+      "free": {
+        "name": "Prueba",
+        "description": "Prueba las funciones básicas",
+        "cta": "Empezar prueba",
+        "features": {
+          "basic": [
+            "Traducción de texto ilimitada",
+            "5 reconocimientos de imagen al mes",
+            "3 procesamientos PDF al mes"
+          ],
+          "freeAdvanced": [
+            "2 reconocimientos de voz al mes",
+            "1 procesamiento de vídeo al mes"
+          ],
+          "freeSupport": [
+            "Soporte básico"
+          ]
+        }
+      },
+      "monthly": {
+        "name": "Plan mensual",
+        "description": "Uso personal diario",
+        "cta": "Suscribirse",
+        "period": "mes",
+        "features": {
+          "basic": [
+            "Traducción de texto ilimitada",
+            "50 reconocimientos de imagen al día",
+            "40 procesamientos PDF al día"
+          ],
+          "advanced": [
+            "30 reconocimientos de voz al día",
+            "10 procesamientos de vídeo al día",
+            "Cola prioritaria"
+          ],
+          "support": [
+            "Soporte prioritario"
+          ]
+        }
+      },
+      "yearly": {
+        "name": "Plan anual",
+        "description": "La mejor relación calidad-precio",
+        "cta": "Suscribirse",
+        "recommended": "Recomendado",
+        "discount": "Ahorra ~17%",
+        "features": {
+          "basic": [
+            "Traducción de texto ilimitada",
+            "100 reconocimientos de imagen al día",
+            "80 procesamientos PDF al día"
+          ],
+          "advanced": [
+            "60 reconocimientos de voz al día",
+            "20 procesamientos de vídeo al día",
+            "Cola prioritaria"
+          ],
+          "support": [
+            "Soporte 24 h",
+            "Acceso API avanzado (próximamente)"
+          ]
+        }
+      }
+    },
+    "features": {
+      "basic": "Funciones básicas",
+      "advanced": "Funciones avanzadas",
+      "support": "Soporte"
+    },
+    "monthly": "mes",
+    "yearly": "año",
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "subtitle": "¿Dudas? Contáctanos",
+      "cards": {
+        "security": {
+          "title": "Seguridad y privacidad",
+          "content": "No conservamos tus traducciones ni archivos subidos en nuestros servidores tras el procesamiento. El contenido puede enviarse a proveedores de IA terceros para prestar el servicio. Consulta la Política de privacidad para más detalles."
+        },
+        "quota": {
+          "title": "¿Cómo funcionan las cuotas?",
+          "content": "Gratis: imagen, PDF, voz y vídeo por mes natural; se reinician el día 1; no se acumulan. De pago: por día natural; se reinician a medianoche; no se acumulan."
+        },
+        "payment": {
+          "title": "Métodos de pago",
+          "content": "Usamos Stripe. Tarjetas de crédito y débito habituales. Stripe gestiona los datos de pago; no guardamos tu número de tarjeta completo."
+        },
+        "support": {
+          "title": "Contacto",
+          "content": "Para suscripciones, cuotas o uso: hello@translation.ai"
+        }
+      },
+      "fullPrivacyLink": "Política de privacidad completa"
+    }
+  },
+  "privacy": {
+    "title": "Política de privacidad",
+    "updated": "Última actualización: 12 de abril de 2026",
+    "backToPricing": "Volver a precios",
+    "s1h": "Descripción general",
+    "s1p": "Translation Ai («nosotros») ofrece este servicio de traducción y procesamiento de contenido. Esta política explica qué información interviene y cómo la tratamos.",
+    "s2h": "Información que tratamos",
+    "s2p": "• Cuenta: al registrarte o usar inicio de sesión con GitHub o Google, tratamos correo, nombre para mostrar y datos necesarios para la autenticación.\n\n• Uso: registramos el uso de funciones y cuotas para aplicar tu plan.\n\n• Contenido que envías: texto, imágenes, documentos, audio o vídeo se procesan para ofrecer traducción, OCR, voz o vídeo. No usamos tu contenido para entrenar modelos propios de este producto.",
+    "s3h": "Terceros",
+    "s3p": "Prestar el servicio implica enviar datos (que pueden incluir tu contenido) a proveedores de alojamiento, APIs de modelos de IA y, para pagos, Stripe. Cada parte trata los datos según sus propios términos y políticas de privacidad. No almacenamos el número completo de tu tarjeta.",
+    "s4h": "Almacenamiento y conservación",
+    "s4p": "No tenemos la intención de conservar en nuestros sistemas las entradas y salidas de traducción una vez finalizado el procesamiento. Podemos conservar cuenta, facturación, suscripción y registros operativos y de seguridad limitados cuando sea necesario para operar el servicio y cumplir obligaciones legales.",
+    "s5h": "Seguridad",
+    "s5p": "Usamos HTTPS y controles de acceso razonables. Ningún servicio en línea puede garantizar seguridad absoluta.",
+    "s6h": "Contacto",
+    "s6p": "Para consultas de privacidad: hello@translation.ai"
+  },
+  "nav": {
+    "home": "Inicio",
+    "features": "Funciones",
+    "pricing": "Precios",
+    "privacy": "Privacidad"
+  },
+  "processingStatus": "Procesando…"
+}

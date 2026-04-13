@@ -1,0 +1,101 @@
+import { NextResponse } from 'next/server'
+import OpenAI from 'openai'
+import { requireAuth } from '@/lib/server/require-auth'
+import { checkAndRecordUsage } from '@/lib/server/quota'
+import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+
+export const maxDuration = 60;
+
+export async function POST(request: Request) {
+  const locale = getRequestLocale(request)
+  const auth = await requireAuth()
+  if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
+  const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
+  if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
+
+  const apiKey = process.env.STEP_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: apiMsg(locale, 'apiKeyNotConfigured') },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const formData = await request.formData();
+    const image = formData.get('image');
+    
+    if (!image) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'noImageProvided') },
+        { status: 400 }
+      );
+    }
+
+    const openai = new OpenAI({
+      apiKey: apiKey,
+      baseURL: 'https://api.stepfun.ai/v1',
+      dangerouslyAllowBrowser: true,
+      timeout: 30000 // 30s
+    });
+
+    // Up to 3 attempts.
+    let retries = 3;
+    let lastError;
+
+    while (retries > 0) {
+      try {
+        const systemContent =
+          locale === 'zh'
+            ? '你是 OCR 助手，请准确提取图片中的文字。'
+            : 'You are an OCR assistant. Extract text from the provided image accurately.'
+        const userLine =
+          locale === 'zh' ? '请提取这张图片中的文字：' : 'Please extract text from this image:'
+
+        const response = await openai.chat.completions.create({
+          model: 'step-1v-32k',
+          messages: [
+            { role: 'system', content: systemContent },
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: userLine },
+                { type: 'image_url', image_url: { url: image instanceof File ? URL.createObjectURL(image) : image.toString() } }
+              ]
+            }
+          ]
+        });
+
+        const extractedText = response.choices[0]?.message?.content;
+        if (!extractedText) {
+          throw new Error(apiMsg(locale, 'noTextExtracted'));
+        }
+
+        return NextResponse.json({ text: extractedText });
+      } catch (error: any) {
+        lastError = error;
+        if (error.status === 504) {
+          retries--;
+          if (retries > 0) {
+            // Back off 1s before retry.
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+        }
+        break;
+      }
+    }
+
+    console.error('StepFun OCR error after retries:', lastError);
+    return NextResponse.json(
+      { error: lastError?.message || apiMsg(locale, 'ocrFailed') },
+      { status: lastError?.status || 500 }
+    );
+  } catch (error: any) {
+    console.error('StepFun OCR error:', error);
+    return NextResponse.json(
+      { error: error.message || apiMsg(locale, 'ocrFailed') },
+      { status: error.status || 500 }
+    );
+  }
+} 

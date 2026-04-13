@@ -1,0 +1,71 @@
+import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/server/require-auth';
+import { checkAndRecordUsage } from '@/lib/server/quota';
+import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
+
+const tencentcloud = require("tencentcloud-sdk-nodejs");
+const OcrClient = tencentcloud.ocr.v20181119.Client;
+
+export async function POST(request: Request) {
+  const locale = getRequestLocale(request);
+  try {
+    const auth = await requireAuth();
+    if (!auth) return NextResponse.json({ success: false, message: apiMsg(locale, 'unauthenticated') }, { status: 401 });
+    const quota = await checkAndRecordUsage(auth.userId, 'image', locale);
+    if (!quota.allowed) return NextResponse.json({ success: false, message: quota.error }, { status: 403 });
+
+    const { image } = await request.json();
+
+    if (!image) {
+      return NextResponse.json(
+        { success: false, message: apiMsg(locale, 'missingImageData') },
+        { status: 400 }
+      );
+    }
+
+    const client = new OcrClient({
+      credential: {
+        secretId: process.env.TENCENT_SECRET_ID || '',
+        secretKey: process.env.TENCENT_SECRET_KEY || '',
+      },
+      region: 'ap-guangzhou',
+      profile: {
+        signMethod: 'TC3-HMAC-SHA256',
+        httpProfile: {
+          reqMethod: 'POST',
+          reqTimeout: 30,
+          endpoint: 'ocr.tencentcloudapi.com',
+        },
+      },
+    });
+
+    const base64Data = image.split(',')[1];
+    const result = await client.GeneralBasicOCR({
+      ImageBase64: base64Data,
+      LanguageType: 'auto',
+    });
+
+    if (!result || !result.TextDetections) {
+      throw new Error(apiMsg(locale, 'ocrGenericFailed'));
+    }
+
+    const textLines = result.TextDetections.map((item: any) => item.DetectedText).filter(Boolean);
+    const text = textLines.join('\n');
+
+    return NextResponse.json({
+      success: true,
+      result: text
+    });
+  } catch (error: any) {
+    console.error('腾讯云 OCR 错误:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: error.code === 'AuthFailure' 
+          ? apiMsg(locale, 'tencentAuthFailure')
+          : (error.message || apiMsg(locale, 'ocrGenericFailed'))
+      },
+      { status: 500 }
+    );
+  }
+}

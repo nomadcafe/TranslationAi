@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    /* 更新为 #8cc63f 绿色 */
+    --primary: 84 68% 51%;
+    --primary-foreground: 210 40% 98%;
+    
+    /* 更新为匹配绿色的渐变色 */
+    --secondary: 100 65% 45%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    /* 更新为匹配绿色的渐变色 */
+    --accent: 70 70% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --chart-1: 84 68% 51%;
+    --chart-2: 70 70% 50%;
+    --chart-3: 100 65% 45%;
+    --chart-4: 120 60% 45%;
+    --chart-5: 140 65% 40%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* 更新为 #8cc63f 绿色 */
+    --primary: 84 68% 51%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    /* 更新为匹配绿色的渐变色 */
+    --secondary: 100 65% 45%;
+    --secondary-foreground: 210 40% 98%;
+    
+    /* 更新为匹配绿色的渐变色 */
+    --accent: 70 70% 50%;
+    --accent-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 84 68% 51%;
+    --chart-2: 70 70% 50%;
+    --chart-3: 100 65% 45%;
+    --chart-4: 120 60% 45%;
+    --chart-5: 140 65% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in forwards;
+}
+
+/* Swiper 自定义样式 */
+.testimonials-swiper {
+  padding-bottom: 3rem !important;
+}
+
+.testimonials-swiper .swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+  background: hsl(var(--muted-foreground));
+  opacity: 0.5;
+}
+
+.testimonials-swiper .swiper-pagination-bullet-active {
+  background: hsl(var(--primary));
+  opacity: 1;
+}
+
+.testimonials-swiper .swiper-button-next,
+.testimonials-swiper .swiper-button-prev {
+  color: hsl(var(--primary));
+  transition: all 0.2s;
+}
+
+.testimonials-swiper .swiper-button-next:hover,
+.testimonials-swiper .swiper-button-prev:hover {
+  transform: scale(1.1);
+}
+
+.testimonials-swiper .swiper-button-next::after,
+.testimonials-swiper .swiper-button-prev::after {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* 暗色模式样式 */
+.dark .testimonials-swiper .swiper-pagination-bullet {
+  background: hsl(var(--muted-foreground));
+}
+
+.dark .testimonials-swiper .swiper-pagination-bullet-active {
+  background: hsl(var(--primary));
+}
+
+.dark .testimonials-swiper .swiper-button-next,
+.dark .testimonials-swiper .swiper-button-prev {
+  color: hsl(var(--primary));
+}
