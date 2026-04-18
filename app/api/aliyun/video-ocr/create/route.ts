@@ -1,20 +1,20 @@
 import { NextResponse } from 'next/server'
 import RPCClient from '@alicloud/pop-core'
-import { requireAuth } from '@/lib/server/require-auth'
 import { checkAndRecordUsage } from '@/lib/server/quota'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { aliyunVideorecogEndpoint } from '@/lib/server/aliyun-region'
+import { parseJson } from '@/lib/server/validate'
+import { VideoUrlBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
 interface AsyncJobResult {
   RequestId: string
   Message: string
 }
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ message: apiMsg(locale, 'unauthenticated') }, { status: 401 })
     const quota = await checkAndRecordUsage(auth.userId, 'video', locale)
     if (!quota.allowed) return NextResponse.json({ message: quota.error }, { status: 403 })
 
@@ -22,15 +22,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: apiMsg(locale, 'ossEnvMissing') }, { status: 500 })
     }
 
-    const body = await request.json()
-    const { videoUrl } = body
-
-    if (!videoUrl) {
-      return NextResponse.json(
-        { message: apiMsg(locale, 'missingVideoUrl') },
-        { status: 400 }
-      )
-    }
+    const parsed = await parseJson(request, VideoUrlBody, locale, {
+      errorKey: 'missingVideoUrl',
+      errorField: 'message',
+    })
+    if (!parsed.ok) return parsed.response
+    const { videoUrl } = parsed.data
 
     const client = new RPCClient({
       accessKeyId: process.env.ALIYUN_ACCESS_KEY_ID || '',
@@ -85,4 +82,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-}
+}, { errorField: 'message' })

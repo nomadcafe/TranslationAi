@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
-import { requireAuth } from '@/lib/server/require-auth'
 import { checkAndRecordUsage } from '@/lib/server/quota'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { withAuth } from '@/lib/server/with-auth'
 
 export const maxDuration = 60;
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
-  const auth = await requireAuth()
-  if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
   const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
   if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
 
@@ -22,14 +20,25 @@ export async function POST(request: Request) {
   }
 
   try {
-    const formData = await request.formData();
+    let formData: FormData
+    try {
+      formData = await request.formData();
+    } catch {
+      return NextResponse.json({ error: apiMsg(locale, 'invalidRequestBody') }, { status: 400 })
+    }
     const image = formData.get('image');
-    
-    if (!image) {
+
+    if (!image || (typeof image !== 'string' && !(image instanceof File))) {
       return NextResponse.json(
         { error: apiMsg(locale, 'noImageProvided') },
         { status: 400 }
       );
+    }
+    if (image instanceof File && image.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'fileTooLarge') },
+        { status: 413 }
+      )
     }
 
     const openai = new OpenAI({
@@ -98,4 +107,4 @@ export async function POST(request: Request) {
       { status: error.status || 500 }
     );
   }
-} 
+})

@@ -1,28 +1,23 @@
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
-import { requireAuth } from '@/lib/server/require-auth'
 import { checkAndRecordUsage } from '@/lib/server/quota'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { getKimiApiBaseUrl } from '@/lib/server/kimi-api-base'
+import { parseJson } from '@/lib/server/validate'
+import { ImageBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
 const KIMI_API_KEY = process.env.KIMI_API_KEY
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
     const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
 
-    const { image } = await request.json()
-    
-    if (!image) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'noImageDataProvided') },
-        { status: 400 }
-      )
-    }
+    const parsed = await parseJson(request, ImageBody, locale, { errorKey: 'noImageDataProvided' })
+    if (!parsed.ok) return parsed.response
+    const { image } = parsed.data
 
     if (!KIMI_API_KEY) {
       return NextResponse.json(
@@ -76,4 +71,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-}
+})

@@ -12,6 +12,7 @@ async function migrate() {
     console.log('Enabled uuid-ossp extension')
 
     // Drop tables (destructive migration).
+    await sql`DROP TABLE IF EXISTS translations`
     await sql`DROP TABLE IF EXISTS usage_records`
     await sql`DROP TABLE IF EXISTS payment_history`
     await sql`DROP TABLE IF EXISTS auth_users`
@@ -68,6 +69,24 @@ async function migrate() {
       )
     `
     console.log('Created payment_history table')
+
+    // translations
+    await sql`
+      CREATE TABLE translations (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES auth_users(id) ON DELETE CASCADE,
+        source_text TEXT NOT NULL,
+        translated_text TEXT NOT NULL,
+        source_language VARCHAR(64),
+        target_language VARCHAR(64) NOT NULL,
+        service VARCHAR(32),
+        is_favorite BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `
+    await sql`CREATE INDEX idx_translations_user_created ON translations(user_id, created_at DESC)`
+    await sql`CREATE INDEX idx_translations_user_favorite ON translations(user_id, created_at DESC) WHERE is_favorite`
+    console.log('Created translations table')
 
     console.log('Migration completed successfully')
   } catch (error) {

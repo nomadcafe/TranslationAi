@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/server/require-auth';
 import { checkAndRecordUsage } from '@/lib/server/quota';
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
+import { parseJson } from '@/lib/server/validate';
+import { AsrRecognizeBody } from '@/lib/validation/schemas';
+import { withAuth } from '@/lib/server/with-auth';
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
   try {
-    const auth = await requireAuth();
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 });
     const quota = await checkAndRecordUsage(auth.userId, 'speech', locale);
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 });
 
-    const { audioUrl, appKey, token, taskId } = await request.json();
+    const parsed = await parseJson(request, AsrRecognizeBody, locale);
+    if (!parsed.ok) return parsed.response;
+    const { audioUrl, appKey, token, taskId } = parsed.data;
 
     // Forward to Aliyun speech recognition.
     const response = await fetch('https://nls-gateway.aliyuncs.com/stream/v1/asr', {
@@ -43,4 +45,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+})

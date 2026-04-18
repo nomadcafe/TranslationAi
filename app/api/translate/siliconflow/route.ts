@@ -1,22 +1,17 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { requireAuth } from '@/lib/server/require-auth';
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
+import { parseJson } from '@/lib/server/validate';
+import { TranslateBody } from '@/lib/validation/schemas';
+import { withAuth } from '@/lib/server/with-auth';
+import { saveTranslation } from '@/lib/server/translations';
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
   try {
-    const auth = await requireAuth();
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 });
-
-    const { text, targetLanguage } = await request.json();
-
-    if (!text || !targetLanguage) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'missingParams') },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJson(request, TranslateBody, locale);
+    if (!parsed.ok) return parsed.response;
+    const { text, targetLanguage } = parsed.data;
 
     const apiKey = process.env.SILICONFLOW_API_KEY;
     if (!apiKey) {
@@ -47,6 +42,15 @@ export async function POST(request: Request) {
     });
 
     const translatedText = completion.choices[0].message.content;
+    if (translatedText) {
+      void saveTranslation({
+        userId: auth.userId,
+        sourceText: text,
+        translatedText,
+        targetLanguage,
+        service: 'siliconflow',
+      })
+    }
     return NextResponse.json({ text: translatedText });
 
   } catch (error: any) {
@@ -56,4 +60,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+})

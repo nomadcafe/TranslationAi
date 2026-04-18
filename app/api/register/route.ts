@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 import bcrypt from 'bcryptjs'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { RegisterBody } from '@/lib/validation/schemas'
 
 const databaseUrl = process.env.DATABASE_URL?.trim()
 const sql = databaseUrl ? neon(databaseUrl) : null
@@ -17,29 +18,20 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { email, password } = await req.json()
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'emailPasswordRequired') },
-        { status: 400 }
-      )
+    const raw = await req.json().catch(() => null)
+    const parsed = RegisterBody.safeParse(raw)
+    if (!parsed.success) {
+      const firstIssue = parsed.error.issues[0]
+      const path = firstIssue?.path[0]
+      const key =
+        path === 'email'
+          ? 'emailInvalid'
+          : path === 'password'
+            ? 'passwordTooShort'
+            : 'emailPasswordRequired'
+      return NextResponse.json({ error: apiMsg(locale, key) }, { status: 400 })
     }
-
-    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!EMAIL_RE.test(email)) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'emailInvalid') },
-        { status: 400 }
-      )
-    }
-
-    if (typeof password !== 'string' || password.length < 8) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'passwordTooShort') },
-        { status: 400 }
-      )
-    }
+    const { email, password } = parsed.data
 
     const existingUser = await sql`SELECT id FROM auth_users WHERE email = ${email}`
     if (existingUser.length > 0) {

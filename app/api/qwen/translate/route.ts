@@ -1,22 +1,17 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/server/require-auth';
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
 import { qwenTextGenerationUrl } from '@/lib/server/qwen-api-base';
+import { parseJson } from '@/lib/server/validate';
+import { TranslateTargetLangBody } from '@/lib/validation/schemas';
+import { withAuth } from '@/lib/server/with-auth';
+import { saveTranslation } from '@/lib/server/translations';
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
   try {
-    const auth = await requireAuth();
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 });
-
-    const { text, targetLang } = await request.json();
-
-    if (!text || !targetLang) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'missingParams') },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJson(request, TranslateTargetLangBody, locale);
+    if (!parsed.ok) return parsed.response;
+    const { text, targetLang } = parsed.data;
 
     const systemContent =
       locale === 'zh'
@@ -53,7 +48,17 @@ export async function POST(request: Request) {
     }
 
     const result = await response.json();
-    return NextResponse.json({ text: result.output.text });
+    const translatedText: string | undefined = result.output?.text
+    if (translatedText) {
+      void saveTranslation({
+        userId: auth.userId,
+        sourceText: text,
+        translatedText,
+        targetLanguage: targetLang,
+        service: 'qwen',
+      })
+    }
+    return NextResponse.json({ text: translatedText });
   } catch (error: any) {
     console.error('Error in Qwen translation:', error);
     return NextResponse.json(
@@ -61,4 +66,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+})

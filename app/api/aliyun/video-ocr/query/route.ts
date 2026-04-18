@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import RPCClient from '@alicloud/pop-core'
 import { aliyunVideorecogEndpoint } from '@/lib/server/aliyun-region'
-import { requireAuth } from '@/lib/server/require-auth'
-import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { getRequestLocale } from '@/lib/server/request-i18n'
+import { parseJson } from '@/lib/server/validate'
+import { TaskIdBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
 interface AsyncJobQueryResult {
   RequestId: string
@@ -13,23 +15,13 @@ interface AsyncJobQueryResult {
   }
 }
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request) => {
   const locale = getRequestLocale(request)
-  const auth = await requireAuth()
-  if (!auth) {
-    return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
-  }
 
   try {
-    const body = await request.json()
-    const { taskId } = body
-
-    if (!taskId) {
-      return NextResponse.json(
-        { message: '缺少任务ID' },
-        { status: 400 }
-      )
-    }
+    const parsed = await parseJson(request, TaskIdBody, locale, { errorField: 'message' })
+    if (!parsed.ok) return parsed.response
+    const { taskId } = parsed.data
 
     if (!process.env.ALIYUN_OSS_REGION?.trim()) {
       return NextResponse.json(
@@ -135,4 +127,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-} 
+}, { errorField: 'message' })

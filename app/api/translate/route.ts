@@ -1,9 +1,9 @@
 import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
 import { sign } from '@/lib/server/tencent-sign';
-import { requireAuth } from '@/lib/server/require-auth';
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
 import { checkRateLimit } from '@/lib/server/rate-limit';
+import { withAuth } from '@/lib/server/with-auth';
 import { getKimiApiBaseUrl } from '@/lib/server/kimi-api-base';
 import { ZHIPU_PAAS_BASE } from '@/lib/server/zhipu-api-base';
 import { ZHIPU_TEXT_MODEL } from '@/lib/server/zhipu';
@@ -14,26 +14,16 @@ import {
   getMinimaxOpenAiBaseUrl,
 } from '@/lib/server/minimax-api-base';
 import { translateWithAnthropicClaude } from '@/lib/server/anthropic-claude';
+import { parseJson } from '@/lib/server/validate';
+import { TranslateBody } from '@/lib/validation/schemas';
+import { saveTranslation } from '@/lib/server/translations';
 
-const MAX_TEXT_CHARS = 10_000
-
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
   try {
-    const auth = await requireAuth();
-    if (!auth) {
-      return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 });
-    }
-
-    const { text, targetLanguage, service } = await request.json();
-
-    if (!text || !targetLanguage) {
-      return NextResponse.json({ error: apiMsg(locale, 'missingParams') }, { status: 400 });
-    }
-
-    if (typeof text !== 'string' || text.length > MAX_TEXT_CHARS) {
-      return NextResponse.json({ error: apiMsg(locale, 'textTooLong') }, { status: 400 });
-    }
+    const parsed = await parseJson(request, TranslateBody, locale);
+    if (!parsed.ok) return parsed.response;
+    const { text, targetLanguage, service } = parsed.data;
 
     const rateCheck = checkRateLimit(auth.userId, 'translate')
     if (!rateCheck.allowed) {
@@ -95,12 +85,22 @@ export async function POST(request: Request) {
       }
     }
 
+    if (typeof translatedText === 'string' && translatedText.length > 0) {
+      void saveTranslation({
+        userId: auth.userId,
+        sourceText: text,
+        translatedText,
+        targetLanguage,
+        service: typeof service === 'string' ? service : null,
+      })
+    }
+
     return NextResponse.json({ text: translatedText });
   } catch (error: any) {
     console.error('Translation error:', error);
     return NextResponse.json({ error: error.message || apiMsg(locale, 'translateFailed') }, { status: 500 });
   }
-}
+})
 
 async function translateWithDeepSeekAPI(text: string, targetLanguage: string) {
   const apiKey = process.env.DEEPSEEK_API_KEY;

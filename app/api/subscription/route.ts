@@ -1,23 +1,21 @@
-import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 import { stripe, PLANS } from '@/lib/stripe'
-import { authOptions } from '../auth/[...nextauth]/auth'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { getSiteUrl } from '@/lib/site'
+import { parseJson } from '@/lib/server/validate'
+import { SubscriptionBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
-export async function POST(req: Request) {
+export const POST = withAuth(async (req, auth) => {
   const locale = getRequestLocale(req)
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ message: apiMsg(locale, 'subscriptionUnauthorized') }, { status: 401 })
-    }
-
-    const { priceId } = await req.json()
-    if (!priceId) {
-      return NextResponse.json({ message: apiMsg(locale, 'subscriptionPriceRequired') }, { status: 400 })
-    }
+    const parsed = await parseJson(req, SubscriptionBody, locale, {
+      errorKey: 'subscriptionPriceRequired',
+      errorField: 'message',
+    })
+    if (!parsed.ok) return parsed.response
+    const { priceId } = parsed.data
 
     if (!stripe) {
       return NextResponse.json({ message: apiMsg(locale, 'stripeNotConfigured') }, { status: 500 })
@@ -36,23 +34,22 @@ export async function POST(req: Request) {
     }
     const sql = neon(databaseUrl)
     const rows = (await sql`
-      SELECT id, stripe_customer_id FROM auth_users WHERE email = ${session.user.email}
-    `) as { id: number; stripe_customer_id: string | null }[]
+      SELECT stripe_customer_id FROM auth_users WHERE id = ${auth.userId}
+    `) as { stripe_customer_id: string | null }[]
 
     if (rows.length === 0) {
       return NextResponse.json({ message: apiMsg(locale, 'userNotFound') }, { status: 404 })
     }
 
-    const dbUser = rows[0]
-    let customerId = dbUser.stripe_customer_id
+    let customerId = rows[0].stripe_customer_id
 
     if (!customerId) {
       const customer = await stripe.customers.create({
-        email: session.user.email,
-        metadata: { userId: String(dbUser.id) },
+        email: auth.email,
+        metadata: { userId: String(auth.userId) },
       })
       customerId = customer.id
-      await sql`UPDATE auth_users SET stripe_customer_id = ${customerId} WHERE id = ${dbUser.id}`
+      await sql`UPDATE auth_users SET stripe_customer_id = ${customerId} WHERE id = ${auth.userId}`
     }
 
     const origin = getSiteUrl()
@@ -69,8 +66,8 @@ export async function POST(req: Request) {
       success_url: `${origin}/profile?subscription=success`,
       cancel_url: `${origin}/pricing?canceled=true`,
       subscription_data: {
-        // Use the authoritative DB id rather than session.user.id (which may be string or number).
-        metadata: { userId: String(dbUser.id) },
+        // Use the authoritative DB id so the webhook can resolve back to the right user.
+        metadata: { userId: String(auth.userId) },
       },
     })
 
@@ -79,4 +76,4 @@ export async function POST(req: Request) {
     console.error('Subscription error:', error)
     return NextResponse.json({ message: apiMsg(locale, 'subscriptionInternalError') }, { status: 500 })
   }
-}
+}, { errorField: 'message' })

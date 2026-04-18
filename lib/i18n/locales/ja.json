@@ -652,7 +652,27 @@
     "home": "ホーム",
     "features": "機能",
     "pricing": "料金",
-    "privacy": "プライバシー"
+    "privacy": "プライバシー",
+    "history": "翻訳履歴"
+  },
+  "history": {
+    "title": "翻訳履歴",
+    "subtitle": "過去の翻訳を確認、検索、お気に入りに登録できます。",
+    "searchPlaceholder": "原文または訳文で検索",
+    "favoritesOnly": "お気に入りのみ",
+    "loading": "読み込み中…",
+    "loadMore": "さらに読み込む",
+    "empty": "まだ翻訳履歴がありません。次の翻訳がここに表示されます。",
+    "noMatches": "現在の条件に一致する履歴はありません。",
+    "source": "原文",
+    "translation": "訳文",
+    "toggleFavorite": "お気に入りを切り替え",
+    "copy": "訳文をコピー",
+    "delete": "削除",
+    "copied": "クリップボードにコピーしました",
+    "deleted": "履歴を削除しました",
+    "loadError": "履歴の読み込みに失敗しました",
+    "actionError": "操作に失敗しました。もう一度お試しください"
   },
   "processingStatus": "処理中…"
 }

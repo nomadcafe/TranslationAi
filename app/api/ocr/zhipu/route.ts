@@ -1,24 +1,25 @@
 import { NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/server/require-auth'
 import { checkAndRecordUsage } from '@/lib/server/quota'
 import { zhipuImageOcr } from '@/lib/server/zhipu'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { parseJson } from '@/lib/server/validate'
+import { ImageBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
     const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
 
-    const { image } = await request.json()
-    if (!image) return NextResponse.json({ error: apiMsg(locale, 'missingImage') }, { status: 400 })
+    const parsed = await parseJson(request, ImageBody, locale, { errorKey: 'missingImage' })
+    if (!parsed.ok) return parsed.response
+    const { image } = parsed.data
 
-    const text = await zhipuImageOcr(typeof image === 'string' ? image : image.toString(), locale)
+    const text = await zhipuImageOcr(image, locale)
     return NextResponse.json({ text })
   } catch (error: any) {
     console.error('Z.AI OCR error:', error)
     return NextResponse.json({ error: error.message || apiMsg(locale, 'ocrFailed') }, { status: 500 })
   }
-}
+})
