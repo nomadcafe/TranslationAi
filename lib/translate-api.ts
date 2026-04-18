@@ -1,5 +1,40 @@
 import { apiFetch } from '@/lib/api-fetch'
 
+/**
+ * Stream a translation from the server and call onChunk with the
+ * progressively accumulated result. Returns the final full string.
+ */
+export async function streamTranslate(
+  text: string,
+  targetLanguage: string,
+  service: string,
+  onChunk: (accumulated: string) => void
+): Promise<string> {
+  const response = await apiFetch('/api/translate/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: text.trim(), targetLanguage, service }),
+  })
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error((err as { error?: string }).error || 'Translation failed')
+  }
+
+  const reader = response.body!.getReader()
+  const decoder = new TextDecoder()
+  let accumulated = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    accumulated += decoder.decode(value, { stream: true })
+    onChunk(accumulated)
+  }
+
+  return accumulated
+}
+
 /** Browser-only helpers: POST to `/api/translate` (and related routes). No API keys in the bundle. */
 
 export async function translateWithDeepSeek(text: string, targetLanguage: string) {

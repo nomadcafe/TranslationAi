@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { sign } from '@/lib/server/tencent-sign';
 import { requireAuth } from '@/lib/server/require-auth';
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
+import { checkRateLimit } from '@/lib/server/rate-limit';
 import { getKimiApiBaseUrl } from '@/lib/server/kimi-api-base';
 import { ZHIPU_PAAS_BASE } from '@/lib/server/zhipu-api-base';
 import { ZHIPU_TEXT_MODEL } from '@/lib/server/zhipu';
@@ -32,6 +33,14 @@ export async function POST(request: Request) {
 
     if (typeof text !== 'string' || text.length > MAX_TEXT_CHARS) {
       return NextResponse.json({ error: apiMsg(locale, 'textTooLong') }, { status: 400 });
+    }
+
+    const rateCheck = checkRateLimit(auth.userId, 'translate')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } }
+      )
     }
 
     let translatedText;

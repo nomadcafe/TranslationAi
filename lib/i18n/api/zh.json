@@ -93,5 +93,6 @@
   "emailInvalid": "请输入有效的邮箱地址",
   "passwordTooShort": "密码长度不能少于 8 位",
   "textTooLong": "文本超出最大允许长度",
-  "userNotFoundOrMisconfigured": "用户不存在或服务配置错误"
+  "userNotFoundOrMisconfigured": "用户不存在或服务配置错误",
+  "rateLimitExceeded": "请求过于频繁，请稍后再试"
 }
