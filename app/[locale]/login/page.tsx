@@ -23,7 +23,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const callbackUrl = searchParams.get('returnUrl') || searchParams.get('callbackUrl') || '/'
+  // Only accept same-origin relative paths to prevent open-redirect via ?callbackUrl=https://evil.com.
+  const rawCallback = searchParams.get('returnUrl') || searchParams.get('callbackUrl') || '/'
+  const callbackUrl = rawCallback.startsWith('/') && !rawCallback.startsWith('//') ? rawCallback : '/'
 
   useEffect(() => {
     if (session) {
@@ -40,20 +42,14 @@ export default function LoginPage() {
         throw new Error(t('auth.login.error.required'))
       }
 
-      console.log('Attempting to sign in with credentials, callbackUrl:', callbackUrl)
-      
-      const result = await signIn('credentials', {
+      await signIn('credentials', {
         email,
         password,
         redirect: true,
         callbackUrl,
       })
-
       // With redirect: true, execution stops here on success.
-      // NextAuth redirects to callbackUrl after sign-in.
-      console.log('Sign in result:', result)
     } catch (error: any) {
-      console.error('Sign in error:', error)
       toast.error(error.message || t('auth.signIn.error'))
     } finally {
       setLoading(false)
@@ -63,13 +59,8 @@ export default function LoginPage() {
   const handleGitHubLogin = async () => {
     setLoading(true)
     try {
-      console.log('Attempting GitHub login, callbackUrl:', callbackUrl)
-      await signIn('github', { 
-        callbackUrl,
-        redirect: true
-      })
-    } catch (error) {
-      console.error('GitHub login error:', error)
+      await signIn('github', { callbackUrl, redirect: true })
+    } catch {
       toast.error(t('auth.signIn.error'))
     }
   }
@@ -77,13 +68,8 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setLoading(true)
     try {
-      console.log('Attempting Google login, callbackUrl:', callbackUrl)
-      await signIn('google', { 
-        callbackUrl,
-        redirect: true
-      })
-    } catch (error) {
-      console.error('Google login error:', error)
+      await signIn('google', { callbackUrl, redirect: true })
+    } catch {
       toast.error(t('auth.signIn.error'))
     }
   }

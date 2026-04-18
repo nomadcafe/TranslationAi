@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { sign } from '@/lib/server/tencent-sign';
+import { requireAuth } from '@/lib/server/require-auth';
+import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
 
 const endpoint = 'asr.tencentcloudapi.com';
 const service = 'asr';
@@ -8,6 +10,12 @@ const region = 'ap-guangzhou';
 const action = 'DescribeTaskStatus';
 
 export async function POST(request: Request) {
+  const locale = getRequestLocale(request);
+  const auth = await requireAuth();
+  if (!auth) {
+    return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 });
+  }
+
   try {
     const { taskId } = await request.json();
 

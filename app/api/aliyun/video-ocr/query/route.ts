@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import RPCClient from '@alicloud/pop-core'
 import { aliyunVideorecogEndpoint } from '@/lib/server/aliyun-region'
+import { requireAuth } from '@/lib/server/require-auth'
+import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 
 interface AsyncJobQueryResult {
   RequestId: string
@@ -12,6 +14,12 @@ interface AsyncJobQueryResult {
 }
 
 export async function POST(request: Request) {
+  const locale = getRequestLocale(request)
+  const auth = await requireAuth()
+  if (!auth) {
+    return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     const { taskId } = body
