@@ -1,7 +1,8 @@
 import Stripe from 'stripe'
+import { FREE_QUOTA, MONTHLY_QUOTA, YEARLY_QUOTA } from '@/lib/quota-plans'
 
 // Server-side Stripe client.
-export const stripe = process.env.STRIPE_SECRET_KEY 
+export const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2025-02-24.acacia',
       typescript: true,
@@ -34,13 +35,7 @@ export const PLANS = {
         '基础客服支持'
       ]
     },
-    quota: {
-      text_quota: -1,
-      image_quota: 5,
-      pdf_quota: 3,
-      speech_quota: 2,
-      video_quota: 1
-    }
+    quota: FREE_QUOTA,
   },
   monthly: {
     name: '月度会员',
@@ -62,13 +57,7 @@ export const PLANS = {
         '优先客服支持'
       ]
     },
-    quota: {
-      text_quota: -1,
-      image_quota: 50,
-      pdf_quota: 40,
-      speech_quota: 30,
-      video_quota: 10
-    }
+    quota: MONTHLY_QUOTA,
   },
   yearly: {
     name: '年度会员',
@@ -92,12 +81,6 @@ export const PLANS = {
         '高级API访问（即将推出）'
       ]
     },
-    quota: {
-      text_quota: -1,
-      image_quota: 100,
-      pdf_quota: 80,
-      speech_quota: 60,
-      video_quota: 20
-    }
-  }
-} as const 
+    quota: YEARLY_QUOTA,
+  },
+} as const

@@ -89,5 +89,9 @@
   "fileTooLarge100Mb": "文件过大，最大 100MB",
   "ossMimeNotAllowed": "仅支持视频(mp4/webm/mov)或图片(jpeg/png/gif/webp)",
   "ossExtNotAllowed": "文件扩展名不在允许列表中",
-  "legacyRegisterDisabled": "该注册接口已停用，请使用 POST /api/register。"
+  "legacyRegisterDisabled": "该注册接口已停用，请使用 POST /api/register。",
+  "emailInvalid": "请输入有效的邮箱地址",
+  "passwordTooShort": "密码长度不能少于 8 位",
+  "textTooLong": "文本超出最大允许长度",
+  "userNotFoundOrMisconfigured": "用户不存在或服务配置错误"
 }

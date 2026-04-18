@@ -10,7 +10,7 @@ export function getAnthropicApiKey(): string | undefined {
 
 /** Model id or alias, e.g. claude-sonnet-4-5 */
 export function getAnthropicClaudeModel(): string {
-  return process.env.ANTHROPIC_CLAUDE_MODEL?.trim() || 'claude-sonnet-4-5'
+  return process.env.ANTHROPIC_CLAUDE_MODEL?.trim() || 'claude-sonnet-4-6'
 }
 
 export function textFromAnthropicMessage(message: Anthropic.Message): string {
