@@ -14,6 +14,8 @@ import {
 } from '@/lib/server/minimax-api-base';
 import { translateWithAnthropicClaude } from '@/lib/server/anthropic-claude';
 
+const MAX_TEXT_CHARS = 10_000
+
 export async function POST(request: Request) {
   const locale = getRequestLocale(request);
   try {
@@ -26,6 +28,10 @@ export async function POST(request: Request) {
 
     if (!text || !targetLanguage) {
       return NextResponse.json({ error: apiMsg(locale, 'missingParams') }, { status: 400 });
+    }
+
+    if (typeof text !== 'string' || text.length > MAX_TEXT_CHARS) {
+      return NextResponse.json({ error: apiMsg(locale, 'textTooLong') }, { status: 400 });
     }
 
     let translatedText;
@@ -340,19 +346,14 @@ async function translateWithGeminiAPI(text: string, targetLanguage: string) {
   if (!apiKey) throw new Error('Gemini API key not found');
   const { GoogleGenerativeAI } = await import('@google/generative-ai');
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-  const segments = text.split('\n\n');
-  const translatedSegments: string[] = [];
-  for (const segment of segments) {
-    if (!segment.trim()) {
-      translatedSegments.push('');
-      continue;
-    }
-    const result = await model.generateContent([`Translate to ${targetLanguage}:`, segment.trim()]);
-    const response = await result.response;
-    translatedSegments.push(response.text().trim());
-  }
-  return translatedSegments.join('\n\n');
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  // Send the whole text in a single request instead of one call per paragraph.
+  const result = await model.generateContent([
+    `Translate the following text to ${targetLanguage}. Return only the translated text, preserving paragraphs and line breaks:`,
+    text,
+  ]);
+  const response = await result.response;
+  return response.text().trim();
 }
 
 async function translateWithStepAPI(text: string, targetLanguage: string) {

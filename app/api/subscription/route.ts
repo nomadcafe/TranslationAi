@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
+import { neon } from '@neondatabase/serverless'
 import { stripe, PLANS } from '@/lib/stripe'
 import { authOptions } from '../auth/[...nextauth]/auth'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
@@ -28,17 +29,36 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: apiMsg(locale, 'subscriptionInvalidPrice') }, { status: 400 })
     }
 
-    const customer = await stripe.customers.create({
-      email: session.user.email,
-      metadata: {
-        userId: session.user.id
-      }
-    })
+    // Reuse an existing Stripe customer instead of creating a duplicate on every checkout.
+    const databaseUrl = process.env.DATABASE_URL?.trim()
+    if (!databaseUrl) {
+      return NextResponse.json({ message: apiMsg(locale, 'serviceNotConfigured') }, { status: 500 })
+    }
+    const sql = neon(databaseUrl)
+    const rows = (await sql`
+      SELECT id, stripe_customer_id FROM auth_users WHERE email = ${session.user.email}
+    `) as { id: number; stripe_customer_id: string | null }[]
+
+    if (rows.length === 0) {
+      return NextResponse.json({ message: apiMsg(locale, 'userNotFound') }, { status: 404 })
+    }
+
+    const dbUser = rows[0]
+    let customerId = dbUser.stripe_customer_id
+
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: session.user.email,
+        metadata: { userId: String(dbUser.id) },
+      })
+      customerId = customer.id
+      await sql`UPDATE auth_users SET stripe_customer_id = ${customerId} WHERE id = ${dbUser.id}`
+    }
 
     const origin = getSiteUrl()
 
     const checkoutSession = await stripe.checkout.sessions.create({
-      customer: customer.id,
+      customer: customerId,
       line_items: [
         {
           price: priceId,

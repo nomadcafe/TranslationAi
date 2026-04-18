@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { neon } from '@neondatabase/serverless'
+import { MONTHLY_QUOTA, YEARLY_QUOTA, FREE_QUOTA } from '@/lib/quota-plans'
 
 export async function POST(req: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim()
@@ -52,26 +53,13 @@ export async function POST(req: Request) {
           console.info('[stripe webhook]', event.type, event.id)
         }
 
-        // Map Stripe price -> plan quotas.
-        const quotaUpdate = priceId === process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ? {
-          text_quota: -1,
-          image_quota: 50,
-          pdf_quota: 40,
-          speech_quota: 30,
-          video_quota: 10
-        } : priceId === process.env.NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID ? {
-          text_quota: -1,
-          image_quota: 100,
-          pdf_quota: 80,
-          speech_quota: 60,
-          video_quota: 20
-        } : {
-          text_quota: -1,
-          image_quota: 5,
-          pdf_quota: 3,
-          speech_quota: 2,
-          video_quota: 1
-        }
+        // Map Stripe price -> plan quotas (sourced from the single quota-plans constant).
+        const quotaUpdate =
+          priceId === process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID
+            ? MONTHLY_QUOTA
+            : priceId === process.env.NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID
+            ? YEARLY_QUOTA
+            : FREE_QUOTA
 
         console.log('执行数据库更新:', {
           customerId: subscription.customer,
@@ -94,6 +82,7 @@ export async function POST(req: Request) {
             pdf_quota = ${quotaUpdate.pdf_quota},
             speech_quota = ${quotaUpdate.speech_quota},
             video_quota = ${quotaUpdate.video_quota}
+
           WHERE id = ${userId}
         `
         break
@@ -109,8 +98,9 @@ export async function POST(req: Request) {
         await sql`
           UPDATE auth_users 
           SET stripe_subscription_id = NULL, stripe_price_id = NULL, stripe_current_period_end = NULL,
-              text_quota = -1, image_quota = 5, pdf_quota = 3, speech_quota = 2, video_quota = 1,
-              quota_reset_at = ${firstDayOfMonth}
+              text_quota = ${FREE_QUOTA.text_quota}, image_quota = ${FREE_QUOTA.image_quota},
+              pdf_quota = ${FREE_QUOTA.pdf_quota}, speech_quota = ${FREE_QUOTA.speech_quota},
+              video_quota = ${FREE_QUOTA.video_quota}, quota_reset_at = ${firstDayOfMonth}
           WHERE id = ${userId}
         `
         break

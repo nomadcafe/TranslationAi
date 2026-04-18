@@ -89,5 +89,9 @@
   "fileTooLarge100Mb": "ファイルが大きすぎます（最大 100MB）",
   "ossMimeNotAllowed": "動画（mp4/webm/mov）または画像（jpeg/png/gif/webp）のみ対応しています",
   "ossExtNotAllowed": "この拡張子のファイルは許可されていません",
-  "legacyRegisterDisabled": "この登録エンドポイントは廃止されました。POST /api/register を使用してください。"
+  "legacyRegisterDisabled": "この登録エンドポイントは廃止されました。POST /api/register を使用してください。",
+  "emailInvalid": "有効なメールアドレスを入力してください",
+  "passwordTooShort": "パスワードは 8 文字以上にしてください",
+  "textTooLong": "テキストが最大許容文字数を超えています",
+  "userNotFoundOrMisconfigured": "ユーザーが見つからないかサービスの設定が不正です"
 }

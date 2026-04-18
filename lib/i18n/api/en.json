@@ -89,5 +89,9 @@
   "fileTooLarge100Mb": "File too large (max 100MB)",
   "ossMimeNotAllowed": "Only video (mp4/webm/mov) or images (jpeg/png/gif/webp) are allowed",
   "ossExtNotAllowed": "File extension is not allowed",
-  "legacyRegisterDisabled": "This registration endpoint is no longer available. Use POST /api/register."
+  "legacyRegisterDisabled": "This registration endpoint is no longer available. Use POST /api/register.",
+  "emailInvalid": "Please enter a valid email address",
+  "passwordTooShort": "Password must be at least 8 characters",
+  "textTooLong": "Text exceeds the maximum allowed length",
+  "userNotFoundOrMisconfigured": "User not found or service misconfigured"
 }

@@ -26,14 +26,23 @@ export async function POST(req: Request) {
       )
     }
 
-    console.log('检查邮箱是否存在:', email)
-    const existingUser = await sql`
-      SELECT id FROM auth_users WHERE email = ${email}
-    `
-    console.log('查询结果:', existingUser)
-    
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!EMAIL_RE.test(email)) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'emailInvalid') },
+        { status: 400 }
+      )
+    }
+
+    if (typeof password !== 'string' || password.length < 8) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'passwordTooShort') },
+        { status: 400 }
+      )
+    }
+
+    const existingUser = await sql`SELECT id FROM auth_users WHERE email = ${email}`
     if (existingUser.length > 0) {
-      console.log('邮箱已存在')
       return NextResponse.json(
         { error: apiMsg(locale, 'emailAlreadyRegistered') },
         { status: 400 }

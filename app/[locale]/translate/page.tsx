@@ -219,13 +219,6 @@ export default function TranslatePage() {
     router.push(`/register?callbackUrl=${encodeURIComponent(pathname)}`)
   }, [router, pathname])
 
-  // Per-feature remaining usage for the UI.
-  const [usageCounts, setUsageCounts] = useState({
-    image: 0,
-    pdf: 0,
-    speech: 0,
-    video: 0
-  });
 
   useEffect(() => {
     // Lazy-init Tencent ASR helper (browser + polling APIs).
@@ -391,13 +384,6 @@ export default function TranslatePage() {
       setIsProcessing(false);
     }
   };
-
-  const handleSpeechFile = async (file: File): Promise<string> => {
-    if (!file.type.startsWith('audio/')) {
-      throw new Error(t('error.invalidAudioFile'))
-    }
-    return await recognizeAudioFile(file)
-  }
 
   const handleVideoUpload = async (file: File) => {
     if (!checkAuth()) return;
@@ -607,13 +593,6 @@ export default function TranslatePage() {
     }
   };
 
-  const handleVideoFile = async (file: File): Promise<string> => {
-    if (!file.type.startsWith('video/')) {
-      throw new Error(t('error.invalidVideoFile'))
-    }
-    return await processVideoFile(file)
-  }
-
   // Shared file input onChange (type-specific dispatch).
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -649,15 +628,7 @@ export default function TranslatePage() {
           if (!file.type.startsWith('audio/')) {
             throw new Error(t('error.invalidAudioFile'))
           }
-          // Check quota
-          if (!hasRemainingQuota('speech')) {
-            setShowSubscriptionDialog(true);
-            return;
-          }
-          // Record usage
-          if (!await checkAndUpdateUsage('speech')) {
-            return;
-          }
+          // handleSpeechUpload performs the quota check and records usage internally.
           await handleSpeechUpload(e)
           break
         

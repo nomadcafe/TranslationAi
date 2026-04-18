@@ -1,12 +1,8 @@
 import { neon } from '@neondatabase/serverless'
-import fs from 'fs'
-import path from 'path'
 import dotenv from 'dotenv'
 
-// Load .env.local for DATABASE_URL.
 dotenv.config({ path: '.env.local' })
 
-// Prefer NEW_DATABASE_URL, else DATABASE_URL.
 const sql = neon(process.env.NEW_DATABASE_URL || process.env.DATABASE_URL!)
 
 async function migrate() {
