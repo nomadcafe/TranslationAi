@@ -93,5 +93,6 @@
   "emailInvalid": "Please enter a valid email address",
   "passwordTooShort": "Password must be at least 8 characters",
   "textTooLong": "Text exceeds the maximum allowed length",
-  "userNotFoundOrMisconfigured": "User not found or service misconfigured"
+  "userNotFoundOrMisconfigured": "User not found or service misconfigured",
+  "rateLimitExceeded": "Too many requests, please try again in a moment"
 }

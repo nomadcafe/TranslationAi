@@ -93,5 +93,6 @@
   "emailInvalid": "有効なメールアドレスを入力してください",
   "passwordTooShort": "パスワードは 8 文字以上にしてください",
   "textTooLong": "テキストが最大許容文字数を超えています",
-  "userNotFoundOrMisconfigured": "ユーザーが見つからないかサービスの設定が不正です"
+  "userNotFoundOrMisconfigured": "ユーザーが見つからないかサービスの設定が不正です",
+  "rateLimitExceeded": "リクエストが多すぎます。しばらくしてからもう一度お試しください"
 }

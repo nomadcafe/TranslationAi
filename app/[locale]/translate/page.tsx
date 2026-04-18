@@ -22,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { translateWithDeepSeek, translateWithQwen, translateWithZhipu, translateWithHunyuan, translateWith4oMini, translateWithMinimax, translateWithSiliconFlow, translateWithClaude, translateWithStepAPI, translateWithGemini } from '@/lib/translate-api'
+import { streamTranslate } from '@/lib/translate-api'
 import { extractTextWithQwen } from '@/lib/qwen'
 import { extractTextWithGemini } from '@/lib/gemini'
 import { extractVideoFrames, analyzeVideoContent, extractTextWithZhipu, extractFileContent } from '@/lib/zhipu'
@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { extractTextWithStep } from '@/lib/step'
 import { SubscriptionDialog } from "@/components/subscription-dialog"
+import { ResultBlock } from "@/components/result-block"
 
 interface QuotaInfo {
   text_quota: number;
@@ -97,6 +98,8 @@ export default function TranslatePage() {
   const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | null>(null)
   const [videoContent, setVideoContent] = useState<string>('');
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [videoStatus, setVideoStatus] = useState<string | null>(null)
 
   // Whether the user still has quota for the current action.
   const hasRemainingQuota = useCallback((type: keyof Omit<QuotaInfo['usage'], 'text'>) => {
@@ -742,70 +745,30 @@ export default function TranslatePage() {
     throw new Error(t('error.videoServiceNotSupported'));
   };
 
-  // Plain text translation submit.
+  // Plain text translation submit (streaming).
   const handleTextTranslate = async () => {
     if (!sourceText) {
-      toast({
-        title: t('error.noText'),
-        description: t('error.noTextDesc'),
-        variant: "destructive"
-      });
+      toast({ title: t('error.noText'), description: t('error.noTextDesc'), variant: "destructive" });
       return;
     }
-
     if (!selectedLanguage) {
-      toast({
-        title: t('error.noLanguage'),
-        description: t('error.noLanguageDesc'),
-        variant: "destructive"
-      });
+      toast({ title: t('error.noLanguage'), description: t('error.noLanguageDesc'), variant: "destructive" });
       return;
     }
 
     setIsProcessing(true);
+    setIsStreaming(true);
+    setTranslatedText('');
     try {
-      let result: string;
-      switch (translationService) {
-        case 'deepseek':
-          result = await translateWithDeepSeek(sourceText, selectedLanguage)
-          break;
-        case 'qwen':
-          result = await translateWithQwen(sourceText, selectedLanguage)
-          break;
-        case 'gemini':
-          result = await translateWithGemini(sourceText, selectedLanguage)
-          break;
-        case 'zhipu':
-          result = await translateWithZhipu(sourceText, selectedLanguage)
-          break;
-        case 'hunyuan':
-          result = await translateWithHunyuan(sourceText, selectedLanguage)
-          break;
-        case 'minimax':
-          result = await translateWithMinimax(sourceText, selectedLanguage)
-          break;
-        case 'claude':
-          result = await translateWithClaude(sourceText, selectedLanguage)
-          break;
-        case 'step':
-          result = await translateWithStepAPI(sourceText, selectedLanguage)
-          break;
-        default:
-          result = await translateWithDeepSeek(sourceText, selectedLanguage)
-      }
-      setTranslatedText(result);
-      toast({
-        title: t('success.translated'),
-        description: t('success.description')
+      await streamTranslate(sourceText, selectedLanguage, translationService, (chunk) => {
+        setTranslatedText(chunk);
       });
+      toast({ title: t('success.translated'), description: t('success.description') });
     } catch (error: any) {
-      toast({
-        title: t('errors.translationError'),
-        description: error.message || t('errors.translationDesc'),
-        variant: "destructive"
-      });
+      toast({ title: t('errors.translationError'), description: error.message || t('errors.translationDesc'), variant: "destructive" });
     } finally {
       setIsProcessing(false);
+      setIsStreaming(false);
     }
   };
 
@@ -967,73 +930,30 @@ export default function TranslatePage() {
     }
   };
 
-  // Translate extracted or pasted text.
+  // Translate extracted or pasted text (streaming).
   const handleTranslate = async () => {
-    if (!extractedText && !fileContent || !selectedLanguage) {
-      toast({
-        title: t('error.translating'),
-        description: t('error.noLanguage'),
-        variant: "destructive"
-      });
+    if ((!extractedText && !fileContent) || !selectedLanguage) {
+      toast({ title: t('error.translating'), description: t('error.noLanguage'), variant: "destructive" });
       return;
     }
 
     setIsProcessing(true);
+    setIsStreaming(true);
+    setTranslatedText('');
     try {
-      let result: string;
-      try {
-        switch (translationService) {
-          case 'deepseek':
-            result = await translateWithDeepSeek(extractedText || fileContent, selectedLanguage);
-            break;
-          case 'qwen':
-            result = await translateWithQwen(extractedText || fileContent, selectedLanguage);
-            break;
-          case 'gemini':
-            result = await translateWithGemini(extractedText || fileContent, selectedLanguage);
-            break;
-          case 'zhipu':
-            result = await translateWithZhipu(extractedText || fileContent, selectedLanguage);
-            break;
-          case 'hunyuan':
-            result = await translateWithHunyuan(extractedText || fileContent, selectedLanguage);
-            break;
-          case 'minimax':
-            result = await translateWithMinimax(extractedText || fileContent, selectedLanguage);
-            break;
-          case 'claude':
-            result = await translateWithClaude(extractedText || fileContent, selectedLanguage);
-            break;
-          case 'step':
-            result = await translateWithStepAPI(extractedText || fileContent, selectedLanguage);
-            break;
-          default:
-            result = await translateWithDeepSeek(extractedText || fileContent, selectedLanguage);
-        }
-      } catch (serviceError: any) {
-        console.error(`${translationService} ${t('console.translationServiceError')}:`, serviceError);
-        if (translationService !== 'deepseek') {
-          console.log(t('console.tryingDeepSeek'));
-          result = await translateWithDeepSeek(extractedText || fileContent, selectedLanguage);
-        } else {
-          throw serviceError;
-        }
-      }
-
-      setTranslatedText(result);
-      toast({
-        title: t('success.translated'),
-        description: t('success.description')
-      });
+      await streamTranslate(
+        extractedText || fileContent,
+        selectedLanguage,
+        translationService,
+        (chunk) => setTranslatedText(chunk)
+      );
+      toast({ title: t('success.translated'), description: t('success.description') });
     } catch (error: any) {
       console.error(t('console.translationError'), error);
-      toast({
-        title: t('errors.translationError'),
-        description: error.message || t('errors.translationDesc'),
-        variant: "destructive"
-      });
+      toast({ title: t('errors.translationError'), description: error.message || t('errors.translationDesc'), variant: "destructive" });
     } finally {
       setIsProcessing(false);
+      setIsStreaming(false);
     }
   };
 
@@ -1119,42 +1039,42 @@ export default function TranslatePage() {
     }
   };
 
-  // Poll async video OCR until done or timeout.
+  // Poll async video OCR until done or timeout, reporting attempt count as progress.
   const pollTaskStatus = async (taskId: string) => {
     let attempts = 0;
-    const POLL_INTERVAL = 5000; // 5s
-    const MAX_POLL_ATTEMPTS = 60; // 60 * 5s ~= 5 minutes
-    
+    const POLL_INTERVAL = 5000;
+    const MAX_POLL_ATTEMPTS = 60; // 60 × 5 s ≈ 5 minutes
+
     while (attempts < MAX_POLL_ATTEMPTS) {
+      setVideoStatus(`Checking result… (${attempts + 1} / ${MAX_POLL_ATTEMPTS})`);
       try {
         const response = await apiFetch('/api/aliyun/video-ocr/status', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ taskId }),
         });
 
         const result = await response.json();
-        console.log(t('console.videoTaskResult', [result]));
-        
+
         if (result.status === 'success') {
+          setVideoStatus(null);
           return result.data;
         }
-        
+
         if (!result.success) {
           throw new Error(result.message || t('console.videoTaskFailed'));
         }
-        
+
         await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
         attempts++;
-        
       } catch (error) {
+        setVideoStatus(null);
         console.error(t('console.videoTaskQueryFailed'), error);
         throw error;
       }
     }
-    
+
+    setVideoStatus(null);
     throw new Error(t('console.videoTaskTimeout'));
   };
 
@@ -1189,12 +1109,20 @@ export default function TranslatePage() {
 
               <TabsContent value="text">
                 <div className="flex flex-col items-center justify-center gap-4">
-                  <textarea
-                    value={sourceText}
-                    onChange={(e) => setSourceText(e.target.value)}
-                    placeholder={t('enterText')}
-                    className="w-full h-32 sm:h-40 p-4 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
-                  />
+                  <div className="w-full">
+                    <textarea
+                      value={sourceText}
+                      onChange={(e) => setSourceText(e.target.value)}
+                      placeholder={t('enterText')}
+                      className="w-full h-32 sm:h-40 p-4 rounded-lg border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
+                    />
+                    <div className={cn(
+                      "text-right text-xs mt-1",
+                      sourceText.length > 9500 ? "text-red-500" : sourceText.length > 8000 ? "text-yellow-500" : "text-muted-foreground"
+                    )}>
+                      {sourceText.length.toLocaleString()} / 10,000
+                    </div>
+                  </div>
 
                   <div className="flex flex-col w-full gap-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -1280,10 +1208,12 @@ export default function TranslatePage() {
                   </div>
 
                   {translatedText && (
-                    <div className="w-full mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <h3 className="font-medium mb-2 text-sm sm:text-base">{t('translatedText')}</h3>
-                      <p className="whitespace-pre-wrap text-sm sm:text-base">{translatedText}</p>
-                    </div>
+                    <ResultBlock
+                      title={t('translatedText')}
+                      text={translatedText}
+                      streaming={isStreaming}
+                      className="w-full"
+                    />
                   )}
                 </div>
               </TabsContent>
@@ -1457,19 +1387,8 @@ export default function TranslatePage() {
                     </div>
                   </div>
 
-                  {extractedText && (
-                    <div className="w-full max-w-2xl mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <h3 className="font-medium mb-2">{t('extractedText')}</h3>
-                      <p className="whitespace-pre-wrap">{extractedText}</p>
-                    </div>
-                  )}
-
-                  {translatedText && (
-                    <div className="w-full max-w-2xl mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <h3 className="font-medium mb-2">{t('translatedText')}</h3>
-                      <p className="whitespace-pre-wrap">{translatedText}</p>
-                    </div>
-                  )}
+                  {extractedText && <ResultBlock title={t('extractedText')} text={extractedText} />}
+                  {translatedText && <ResultBlock title={t('translatedText')} text={translatedText} streaming={isStreaming} />}
                 </div>
               </TabsContent>
 
@@ -1678,19 +1597,8 @@ export default function TranslatePage() {
                     </TooltipProvider>
                   </div>
 
-                  {extractedText && (
-                    <div className="w-full max-w-2xl mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <h3 className="font-medium mb-2">{t('extractedText')}</h3>
-                      <p className="whitespace-pre-wrap">{extractedText}</p>
-                    </div>
-                  )}
-
-                  {translatedText && (
-                    <div className="w-full max-w-2xl mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <h3 className="font-medium mb-2">{t('translatedText')}</h3>
-                      <p className="whitespace-pre-wrap">{translatedText}</p>
-                    </div>
-                  )}
+                  {extractedText && <ResultBlock title={t('extractedText')} text={extractedText} />}
+                  {translatedText && <ResultBlock title={t('translatedText')} text={translatedText} streaming={isStreaming} />}
                 </div>
               </TabsContent>
 
@@ -1770,12 +1678,7 @@ export default function TranslatePage() {
                     </div>
                   )}
 
-                  {extractedText && (
-                    <div className="w-full max-w-2xl mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <h3 className="font-medium mb-2">{t('extractedText')}</h3>
-                      <p className="whitespace-pre-wrap">{extractedText}</p>
-                    </div>
-                  )}
+                  {extractedText && <ResultBlock title={t('extractedText')} text={extractedText} />}
 
                   <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
                     <Select onValueChange={setSelectedLanguage}>
@@ -1853,12 +1756,7 @@ export default function TranslatePage() {
                     </TooltipProvider>
                   </div>
 
-                  {translatedText && (
-                    <div className="w-full max-w-2xl mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <h3 className="font-medium mb-2">{t('translatedText')}</h3>
-                      <p className="whitespace-pre-wrap">{translatedText}</p>
-                    </div>
-                  )}
+                  {translatedText && <ResultBlock title={t('translatedText')} text={translatedText} streaming={isStreaming} />}
                 </div>
               </TabsContent>
 
@@ -1939,16 +1837,13 @@ export default function TranslatePage() {
 
                   {isProcessing && (
                     <div className="w-full max-w-md p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{t('processing')}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {videoStatus ?? t('processing')}
+                      </p>
                     </div>
                   )}
 
-                  {extractedText && (
-                    <div className="w-full max-w-2xl mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <h3 className="font-medium mb-2">{t('extractedText')}</h3>
-                      <p className="whitespace-pre-wrap">{extractedText}</p>
-                    </div>
-                  )}
+                  {extractedText && <ResultBlock title={t('extractedText')} text={extractedText} />}
 
                   <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
                     <Select onValueChange={setSelectedLanguage}>
@@ -2026,12 +1921,7 @@ export default function TranslatePage() {
                     </TooltipProvider>
                   </div>
 
-                  {translatedText && (
-                    <div className="w-full max-w-2xl mx-auto p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                      <h3 className="font-medium mb-2">{t('translatedText')}</h3>
-                      <p className="whitespace-pre-wrap">{translatedText}</p>
-                    </div>
-                  )}
+                  {translatedText && <ResultBlock title={t('translatedText')} text={translatedText} streaming={isStreaming} />}
                 </div>
               </TabsContent>
             </Tabs>
