@@ -605,7 +605,27 @@
     "home": "首页",
     "features": "功能",
     "pricing": "价格",
-    "privacy": "隐私政策"
+    "privacy": "隐私政策",
+    "history": "翻译历史"
+  },
+  "history": {
+    "title": "翻译历史",
+    "subtitle": "回看、搜索并收藏你此前的翻译结果。",
+    "searchPlaceholder": "搜索原文或译文",
+    "favoritesOnly": "仅看收藏",
+    "loading": "加载中…",
+    "loadMore": "加载更多",
+    "empty": "暂无翻译记录。你的下一次翻译会出现在这里。",
+    "noMatches": "没有符合当前筛选条件的记录。",
+    "source": "原文",
+    "translation": "译文",
+    "toggleFavorite": "切换收藏",
+    "copy": "复制译文",
+    "delete": "删除",
+    "copied": "已复制到剪贴板",
+    "deleted": "已删除该条记录",
+    "loadError": "加载历史记录失败",
+    "actionError": "操作失败，请重试"
   },
   "processingStatus": "处理中..."
 }

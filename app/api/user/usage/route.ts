@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth'
 import {
   checkQuota,
   getUsageCount,
@@ -9,21 +7,18 @@ import {
   getUserIdAndStripePriceId
 } from '@/lib/server/quota'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { parseJson } from '@/lib/server/validate'
+import { UsageBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
-export async function POST(req: Request) {
+export const POST = withAuth(async (req, auth) => {
   const locale = getRequestLocale(req)
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
-    }
+    const parsed = await parseJson(req, UsageBody, locale, { errorKey: 'invalidUsageType' })
+    if (!parsed.ok) return parsed.response
+    const { type } = parsed.data
 
-    const { type } = await req.json()
-    if (!type || !['text', 'image', 'pdf', 'speech', 'video'].includes(type)) {
-      return NextResponse.json({ error: apiMsg(locale, 'invalidUsageType') }, { status: 400 })
-    }
-
-    const user = await getUserIdAndStripePriceId(session.user.email)
+    const user = await getUserIdAndStripePriceId(auth.email)
     if (!user) {
       return NextResponse.json({ error: apiMsg(locale, 'userNotFound') }, { status: 404 })
     }
@@ -52,4 +47,4 @@ export async function POST(req: Request) {
     console.error('记录使用情况失败:', error)
     return NextResponse.json({ error: error.message || apiMsg(locale, 'recordUsageFailed') }, { status: 500 })
   }
-}
+})

@@ -1,23 +1,18 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { requireAuth } from '@/lib/server/require-auth';
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { getKimiApiBaseUrl } from '@/lib/server/kimi-api-base';
+import { parseJson } from '@/lib/server/validate';
+import { TranslateBody } from '@/lib/validation/schemas';
+import { withAuth } from '@/lib/server/with-auth';
+import { saveTranslation } from '@/lib/server/translations';
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
   try {
-    const auth = await requireAuth();
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 });
-
-    const { text, targetLanguage } = await request.json();
-
-    if (!text || !targetLanguage) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'missingParams') },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJson(request, TranslateBody, locale);
+    if (!parsed.ok) return parsed.response;
+    const { text, targetLanguage } = parsed.data;
 
     const apiKey = process.env.KIMI_API_KEY;
     if (!apiKey) {
@@ -55,6 +50,13 @@ export async function POST(request: Request) {
       );
     }
 
+    void saveTranslation({
+      userId: auth.userId,
+      sourceText: text,
+      translatedText,
+      targetLanguage,
+      service: 'kimi',
+    })
     return NextResponse.json({ translatedText });
   } catch (error: any) {
     console.error('Kimi translation error:', error);
@@ -63,4 +65,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+})

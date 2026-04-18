@@ -41,6 +41,10 @@ export function useProfileHref(): string {
   return `/${useMarketingLocalePrefix()}/profile`
 }
 
+export function useHistoryHref(): string {
+  return `/${useMarketingLocalePrefix()}/history`
+}
+
 /** On `/[locale]/...` URLs, switching language updates the path segment. */
 export function useSwitchLocaleNav() {
   const pathname = usePathname()

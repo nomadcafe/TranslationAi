@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { sign } from '@/lib/server/tencent-sign';
-import { requireAuth } from '@/lib/server/require-auth';
 import { checkAndRecordUsage } from '@/lib/server/quota';
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
+import { parseJson } from '@/lib/server/validate';
+import { AsrCreateBody } from '@/lib/validation/schemas';
+import { withAuth } from '@/lib/server/with-auth';
 
 const endpoint = 'asr.tencentcloudapi.com';
 const service = 'asr';
@@ -10,15 +12,15 @@ const version = '2019-06-14';
 const region = 'ap-guangzhou';
 const action = 'CreateRecTask';
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
   try {
-    const auth = await requireAuth();
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 });
     const quota = await checkAndRecordUsage(auth.userId, 'speech', locale);
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 });
 
-    const { engineType, channelNum, resTextFormat, sourceType, data } = await request.json();
+    const parsed = await parseJson(request, AsrCreateBody, locale);
+    if (!parsed.ok) return parsed.response;
+    const { engineType, channelNum, resTextFormat, sourceType, data } = parsed.data;
 
     const timestamp = Math.floor(Date.now() / 1000);
     const params = {
@@ -68,4 +70,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+})

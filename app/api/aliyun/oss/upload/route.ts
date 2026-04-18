@@ -1,34 +1,37 @@
 import { NextResponse } from 'next/server'
 import OSS from 'ali-oss'
 import { v4 as uuidv4 } from 'uuid'
-import { requireAuth } from '@/lib/server/require-auth'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { aliyunOssSdkRegion } from '@/lib/server/aliyun-region'
+import { withAuth } from '@/lib/server/with-auth'
 
 const MAX_FILE_BYTES = 100 * 1024 * 1024 // 100MB
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime']
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 const ALLOWED_EXT = ['.mp4', '.webm', '.mov', '.jpg', '.jpeg', '.png', '.gif', '.webp']
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ message: apiMsg(locale, 'unauthenticated') }, { status: 401 })
-
     if (!process.env.ALIYUN_OSS_BUCKET || !process.env.ALIYUN_OSS_REGION) {
       return NextResponse.json({ message: apiMsg(locale, 'ossEnvMissing') }, { status: 500 })
     }
 
-    const formData = await request.formData()
-    const file = formData.get('file') as File
+    let formData: FormData
+    try {
+      formData = await request.formData()
+    } catch {
+      return NextResponse.json({ message: apiMsg(locale, 'invalidRequestBody') }, { status: 400 })
+    }
+    const rawFile = formData.get('file')
 
-    if (!file) {
+    if (!rawFile || !(rawFile instanceof File)) {
       return NextResponse.json(
         { message: apiMsg(locale, 'missingUploadFile') },
         { status: 400 }
       )
     }
+    const file = rawFile
 
     if (file.size > MAX_FILE_BYTES) {
       return NextResponse.json(
@@ -115,4 +118,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-} 
+}, { errorField: 'message' })

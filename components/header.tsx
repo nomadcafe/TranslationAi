@@ -9,6 +9,7 @@ import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import {
+  useHistoryHref,
   useLoginHref,
   useMarketingHomeHref,
   useMarketingPricingHref,
@@ -40,6 +41,7 @@ export function Header() {
   const loginHref = useLoginHref()
   const registerHref = useRegisterHref()
   const profileHref = useProfileHref()
+  const historyHref = useHistoryHref()
   const switchLocale = useSwitchLocaleNav()
 
   const handleSignOut = async () => {
@@ -157,6 +159,11 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link href={profileHref}>
                     <span suppressHydrationWarning>{t('auth.profileButton')}</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={historyHref}>
+                    <span suppressHydrationWarning>{t('nav.history')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>

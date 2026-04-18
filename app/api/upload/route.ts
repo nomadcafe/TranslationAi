@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
-import { requireAuth } from '@/lib/server/require-auth'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { parseJson } from '@/lib/server/validate'
+import { UploadBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
 const MAX_BODY_BYTES = 10 * 1024 * 1024 // 10MB
 const ALLOWED_IMAGE_PREFIX = /^data:image\/(jpeg|jpg|png|gif|webp);base64,/
 const ALLOWED_VIDEO_PREFIX = /^data:video\/(mp4|webm);base64,/
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
-
     const contentLength = request.headers.get('content-length')
     if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
       return NextResponse.json(
@@ -21,21 +20,9 @@ export async function POST(request: Request) {
       )
     }
 
-    const { file, type } = await request.json()
-
-    if (!file || typeof file !== 'string') {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'fileNotProvided') },
-        { status: 400 }
-      )
-    }
-
-    if (type !== 'image' && type !== 'video') {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'uploadTypeInvalid') },
-        { status: 400 }
-      )
-    }
+    const parsed = await parseJson(request, UploadBody, locale, { errorKey: 'fileNotProvided' })
+    if (!parsed.ok) return parsed.response
+    const { file, type } = parsed.data
 
     const validPrefix = type === 'video' ? ALLOWED_VIDEO_PREFIX.test(file) : ALLOWED_IMAGE_PREFIX.test(file)
     if (!validPrefix) {
@@ -71,4 +58,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-}
+})

@@ -94,5 +94,6 @@
   "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
   "textTooLong": "El texto supera la longitud máxima permitida",
   "userNotFoundOrMisconfigured": "Usuario no encontrado o servicio mal configurado",
-  "rateLimitExceeded": "Demasiadas solicitudes, por favor inténtalo de nuevo en un momento"
+  "rateLimitExceeded": "Demasiadas solicitudes, por favor inténtalo de nuevo en un momento",
+  "invalidRequestBody": "Formato de la solicitud no válido"
 }

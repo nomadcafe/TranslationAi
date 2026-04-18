@@ -1,18 +1,44 @@
 import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/server/require-auth'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { checkRateLimit } from '@/lib/server/rate-limit'
+import { withAuth } from '@/lib/server/with-auth'
 import { getKimiApiBaseUrl } from '@/lib/server/kimi-api-base'
 import { ZHIPU_PAAS_BASE } from '@/lib/server/zhipu-api-base'
 import { ZHIPU_TEXT_MODEL } from '@/lib/server/zhipu'
 import { getQwenCompatibleBaseUrl } from '@/lib/server/qwen-api-base'
 import { getMinimaxApiKey, getMinimaxChatModel, getMinimaxOpenAiBaseUrl } from '@/lib/server/minimax-api-base'
 import { streamWithAnthropicClaude } from '@/lib/server/anthropic-claude'
-
-const MAX_TEXT_CHARS = 10_000
+import { parseJson } from '@/lib/server/validate'
+import { TranslateBody } from '@/lib/validation/schemas'
+import { saveTranslation } from '@/lib/server/translations'
 
 const SYSTEM_PROMPT = 'You are a professional translator. Translate the text directly without any explanations. Preserve paragraphs and line breaks.'
+
+/**
+ * Pass the stream through to the client while buffering a text copy that the
+ * caller receives via onComplete once the upstream writer closes. We need this
+ * because translate/stream delivers tokens incrementally and we can only
+ * persist after the full translation is assembled.
+ */
+function teeStreamForCapture(
+  src: ReadableStream<Uint8Array>,
+  onComplete: (fullText: string) => void
+): ReadableStream<Uint8Array> {
+  const decoder = new TextDecoder()
+  let buffer = ''
+  const transform = new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      buffer += decoder.decode(chunk, { stream: true })
+      controller.enqueue(chunk)
+    },
+    flush() {
+      buffer += decoder.decode()
+      if (buffer.length > 0) onComplete(buffer)
+    },
+  })
+  return src.pipeThrough(transform)
+}
 
 /** Build a ReadableStream via OpenAI-compatible SDK (covers most providers). */
 function streamWithOpenAI(
@@ -51,13 +77,8 @@ function streamWithOpenAI(
   })
 }
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
-
-  const auth = await requireAuth()
-  if (!auth) {
-    return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
-  }
 
   const rateCheck = checkRateLimit(auth.userId, 'translate')
   if (!rateCheck.allowed) {
@@ -67,21 +88,9 @@ export async function POST(request: Request) {
     )
   }
 
-  let body: { text?: unknown; targetLanguage?: unknown; service?: unknown }
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: apiMsg(locale, 'missingParams') }, { status: 400 })
-  }
-
-  const { text, targetLanguage, service = 'deepseek' } = body
-
-  if (!text || !targetLanguage || typeof text !== 'string' || typeof targetLanguage !== 'string') {
-    return NextResponse.json({ error: apiMsg(locale, 'missingParams') }, { status: 400 })
-  }
-  if (text.length > MAX_TEXT_CHARS) {
-    return NextResponse.json({ error: apiMsg(locale, 'textTooLong') }, { status: 400 })
-  }
+  const parsed = await parseJson(request, TranslateBody, locale)
+  if (!parsed.ok) return parsed.response
+  const { text, targetLanguage, service = 'deepseek' } = parsed.data
 
   try {
     let stream: ReadableStream<Uint8Array>
@@ -182,7 +191,17 @@ export async function POST(request: Request) {
       }
     }
 
-    return new Response(stream, {
+    const captured = teeStreamForCapture(stream, (fullText) => {
+      void saveTranslation({
+        userId: auth.userId,
+        sourceText: text,
+        translatedText: fullText,
+        targetLanguage,
+        service: String(service),
+      })
+    })
+
+    return new Response(captured, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache',
@@ -194,4 +213,4 @@ export async function POST(request: Request) {
     console.error('Stream translate error:', msg)
     return NextResponse.json({ error: msg || apiMsg(locale, 'translateFailed') }, { status: 500 })
   }
-}
+})

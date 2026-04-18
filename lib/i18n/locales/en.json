@@ -620,6 +620,26 @@
     "home": "Home",
     "features": "Features",
     "pricing": "Pricing",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "history": "History"
+  },
+  "history": {
+    "title": "Translation History",
+    "subtitle": "Review, search, and favorite your past translations.",
+    "searchPlaceholder": "Search source or translation",
+    "favoritesOnly": "Favorites",
+    "loading": "Loading…",
+    "loadMore": "Load more",
+    "empty": "No translations yet. Your next translation will appear here.",
+    "noMatches": "No translations match the current filters.",
+    "source": "Source",
+    "translation": "Translation",
+    "toggleFavorite": "Toggle favorite",
+    "copy": "Copy translation",
+    "delete": "Delete",
+    "copied": "Copied to clipboard",
+    "deleted": "Translation deleted",
+    "loadError": "Failed to load history",
+    "actionError": "Operation failed, please try again"
   }
 }

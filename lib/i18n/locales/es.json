@@ -652,7 +652,27 @@
     "home": "Inicio",
     "features": "Funciones",
     "pricing": "Precios",
-    "privacy": "Privacidad"
+    "privacy": "Privacidad",
+    "history": "Historial"
+  },
+  "history": {
+    "title": "Historial de traducciones",
+    "subtitle": "Revisa, busca y marca como favoritas tus traducciones anteriores.",
+    "searchPlaceholder": "Buscar en original o traducción",
+    "favoritesOnly": "Solo favoritas",
+    "loading": "Cargando…",
+    "loadMore": "Cargar más",
+    "empty": "Aún no hay traducciones. Tu próxima traducción aparecerá aquí.",
+    "noMatches": "Ninguna traducción coincide con los filtros actuales.",
+    "source": "Original",
+    "translation": "Traducción",
+    "toggleFavorite": "Alternar favorita",
+    "copy": "Copiar traducción",
+    "delete": "Eliminar",
+    "copied": "Copiado al portapapeles",
+    "deleted": "Traducción eliminada",
+    "loadError": "No se pudo cargar el historial",
+    "actionError": "La operación falló, inténtalo de nuevo"
   },
   "processingStatus": "Procesando…"
 }

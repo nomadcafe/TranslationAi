@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { Mistral } from '@mistralai/mistralai'
-import { requireAuth } from '@/lib/server/require-auth'
 import { checkAndRecordUsage } from '@/lib/server/quota'
 import type { AppLocale } from '@/lib/server/request-i18n'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { parseJson } from '@/lib/server/validate'
+import { FileExtractBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
 import { getKimiApiBaseUrl } from '@/lib/server/kimi-api-base'
 
@@ -335,35 +337,21 @@ async function processPdfWithMistral(file: string, filename: string, locale: App
   }
 }
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
     const quota = await checkAndRecordUsage(auth.userId, 'pdf', locale)
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
 
-    const { file, filename, service } = await request.json()
-
-    if (!file) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'fileNotProvided') },
-        { status: 400 }
-      )
-    }
+    const parsed = await parseJson(request, FileExtractBody, locale, { errorKey: 'fileNotProvided' })
+    if (!parsed.ok) return parsed.response
+    const { file, filename, service } = parsed.data
 
     // Approximate decoded size from base64 length.
     const base64Size = file.length * 0.75 // ~bytes from base64 char count
     if (base64Size > 5 * 1024 * 1024) { // 5MB cap
       return NextResponse.json(
         { error: apiMsg(locale, 'fileSizeExceeded') },
-        { status: 400 }
-      )
-    }
-
-    if (service !== 'kimi' && service !== 'mistral') {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'unsupportedService') },
         { status: 400 }
       )
     }
@@ -442,4 +430,4 @@ export async function POST(request: Request) {
       { status: error.status || 500 }
     )
   }
-}
+})

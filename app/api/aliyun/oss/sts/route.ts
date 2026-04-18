@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server'
 import * as $OpenApi from '@alicloud/openapi-client'
 import * as $STS20150401 from '@alicloud/sts20150401'
-import { requireAuth } from '@/lib/server/require-auth'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { aliyunOssSdkRegion, aliyunPublicRegionId } from '@/lib/server/aliyun-region'
+import { withAuth } from '@/lib/server/with-auth'
 
-export async function GET(request: Request) {
+export const GET = withAuth(async (request) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ message: apiMsg(locale, 'unauthenticated') }, { status: 401 })
-
     if (!process.env.ALIYUN_ACCESS_KEY_ID || 
         !process.env.ALIYUN_ACCESS_KEY_SECRET || 
         !process.env.ALIYUN_RAM_ROLE_ARN || 
@@ -66,4 +63,4 @@ export async function GET(request: Request) {
       }
     }, { status: 500 })
   }
-}
+}, { errorField: 'message' })

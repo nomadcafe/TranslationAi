@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import * as tencentcloud from 'tencentcloud-sdk-nodejs-ocr'
-import { requireAuth } from '@/lib/server/require-auth'
 import { checkAndRecordUsage } from '@/lib/server/quota'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { parseJson } from '@/lib/server/validate'
+import { ImageBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
 const OcrClient = tencentcloud.ocr.v20181119.Client
 
@@ -38,22 +40,18 @@ const client = new OcrClient({
   },
 })
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ success: false, message: apiMsg(locale, 'unauthenticated') }, { status: 401 })
     const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
     if (!quota.allowed) return NextResponse.json({ success: false, message: quota.error }, { status: 403 })
 
-    const { image } = await request.json()
-
-    if (!image) {
-      return NextResponse.json(
-        { success: false, message: apiMsg(locale, 'missingImageData') },
-        { status: 400 }
-      )
-    }
+    const parsed = await parseJson(request, ImageBody, locale, {
+      errorKey: 'missingImageData',
+      errorField: 'message',
+    })
+    if (!parsed.ok) return parsed.response
+    const { image } = parsed.data
 
     const result = await client.GeneralBasicOCR({
       ImageBase64: image,
@@ -79,4 +77,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-} 
+}, { errorField: 'message' }) 

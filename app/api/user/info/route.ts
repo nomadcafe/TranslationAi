@@ -1,7 +1,6 @@
-import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
-import { authOptions } from '../../auth/[...nextauth]/auth'
+import { withAuth } from '@/lib/server/with-auth'
 
 interface User {
   id: string;
@@ -39,21 +38,13 @@ interface UsageInfo {
   video: number;
 }
 
-export async function GET() {
+export const GET = withAuth(async (_req, auth) => {
   try {
-    console.log('开始获取用户信息')
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      console.log('未找到用户会话')
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
-
-    console.log('用户邮箱:', session.user.email)
     const sql = neon(process.env.DATABASE_URL!)
-    
+
     // Load profile + Stripe subscription snapshot.
     const users = await sql`
-      SELECT 
+      SELECT
         id,
         email,
         name,
@@ -71,8 +62,8 @@ export async function GET() {
         quota_reset_at,
         created_at,
         updated_at
-      FROM auth_users 
-      WHERE email = ${session.user.email}
+      FROM auth_users
+      WHERE id = ${auth.userId}
     ` as User[]
 
     if (!users.length) {
@@ -219,4 +210,4 @@ export async function GET() {
     console.error('获取用户信息失败:', error)
     return new NextResponse('Internal error', { status: 500 })
   }
-} 
+})

@@ -1,25 +1,20 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/server/require-auth';
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
 import {
   getAnthropicApiKey,
   translateWithAnthropicClaude,
 } from '@/lib/server/anthropic-claude';
+import { parseJson } from '@/lib/server/validate';
+import { TranslateBody } from '@/lib/validation/schemas';
+import { withAuth } from '@/lib/server/with-auth';
+import { saveTranslation } from '@/lib/server/translations';
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
   try {
-    const auth = await requireAuth();
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 });
-
-    const { text, targetLanguage } = await request.json();
-
-    if (!text || !targetLanguage) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'missingParams') },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJson(request, TranslateBody, locale);
+    if (!parsed.ok) return parsed.response;
+    const { text, targetLanguage } = parsed.data;
 
     if (!getAnthropicApiKey()) {
       return NextResponse.json(
@@ -38,6 +33,15 @@ export async function POST(request: Request) {
       targetLanguage,
       systemContent
     );
+    if (translatedText) {
+      void saveTranslation({
+        userId: auth.userId,
+        sourceText: text,
+        translatedText,
+        targetLanguage,
+        service: 'claude',
+      })
+    }
     return NextResponse.json({ text: translatedText });
   } catch (error: any) {
     console.error('Claude translation error:', error);
@@ -46,4 +50,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+})

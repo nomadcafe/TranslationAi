@@ -1,29 +1,27 @@
 import { NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/server/require-auth'
 import { checkAndRecordUsage } from '@/lib/server/quota'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { qwenChatCompletionsUrl } from '@/lib/server/qwen-api-base'
+import { parseJson } from '@/lib/server/validate'
+import { ImageBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
     if (!process.env.QWEN_API_KEY?.trim()) {
       return NextResponse.json({ message: apiMsg(locale, 'serviceNotConfigured') }, { status: 503 })
     }
 
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ message: apiMsg(locale, 'unauthenticated') }, { status: 401 })
     const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
     if (!quota.allowed) return NextResponse.json({ message: quota.error }, { status: 403 })
 
-    const { image } = await request.json()
-
-    if (!image) {
-      return NextResponse.json(
-        { message: apiMsg(locale, 'missingImageData') },
-        { status: 400 }
-      )
-    }
+    const parsed = await parseJson(request, ImageBody, locale, {
+      errorKey: 'missingImageData',
+      errorField: 'message',
+    })
+    if (!parsed.ok) return parsed.response
+    const { image } = parsed.data
 
     const ocrInstruction =
       locale === 'zh' ? '请读出图片中的所有文字。' : 'Read all the text in the image.'
@@ -73,4 +71,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-}
+}, { errorField: 'message' })

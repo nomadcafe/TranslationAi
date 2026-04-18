@@ -1,20 +1,18 @@
 import { NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/server/require-auth'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { parseJson } from '@/lib/server/validate'
+import { TranslateTargetLangBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
-
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: apiMsg(locale, 'serviceNotConfigured') }, { status: 500 })
 
-    const { text, targetLang } = await request.json()
-    if (!text || !targetLang) {
-      return NextResponse.json({ error: apiMsg(locale, 'missingTextOrTargetLang') }, { status: 400 })
-    }
+    const parsed = await parseJson(request, TranslateTargetLangBody, locale, { errorKey: 'missingTextOrTargetLang' })
+    if (!parsed.ok) return parsed.response
+    const { text, targetLang } = parsed.data
 
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
     const genAI = new GoogleGenerativeAI(apiKey)
@@ -59,4 +57,4 @@ Rules:
     console.error('Improve error:', error)
     return NextResponse.json({ error: error.message || apiMsg(locale, 'improveFailed') }, { status: 500 })
   }
-}
+})

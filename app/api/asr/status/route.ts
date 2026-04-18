@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { sign } from '@/lib/server/tencent-sign';
-import { requireAuth } from '@/lib/server/require-auth';
-import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
+import { getRequestLocale } from '@/lib/server/request-i18n';
+import { parseJson } from '@/lib/server/validate';
+import { TaskIdBody } from '@/lib/validation/schemas';
+import { withAuth } from '@/lib/server/with-auth';
 
 const endpoint = 'asr.tencentcloudapi.com';
 const service = 'asr';
@@ -9,15 +11,13 @@ const version = '2019-06-14';
 const region = 'ap-guangzhou';
 const action = 'DescribeTaskStatus';
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request) => {
   const locale = getRequestLocale(request);
-  const auth = await requireAuth();
-  if (!auth) {
-    return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 });
-  }
 
   try {
-    const { taskId } = await request.json();
+    const parsed = await parseJson(request, TaskIdBody, locale);
+    if (!parsed.ok) return parsed.response;
+    const { taskId } = parsed.data;
 
     const timestamp = Math.floor(Date.now() / 1000);
     const params = {
@@ -63,4 +63,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+})

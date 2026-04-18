@@ -1,23 +1,24 @@
 import { NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/server/require-auth'
 import { checkAndRecordUsage } from '@/lib/server/quota'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
+import { parseJson } from '@/lib/server/validate'
+import { ImageBody } from '@/lib/validation/schemas'
+import { withAuth } from '@/lib/server/with-auth'
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
-    const auth = await requireAuth()
-    if (!auth) return NextResponse.json({ error: apiMsg(locale, 'unauthenticated') }, { status: 401 })
     const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: apiMsg(locale, 'serviceNotConfigured') }, { status: 500 })
 
-    const { image } = await request.json()
-    if (!image) return NextResponse.json({ error: apiMsg(locale, 'missingImage') }, { status: 400 })
+    const parsed = await parseJson(request, ImageBody, locale, { errorKey: 'missingImage' })
+    if (!parsed.ok) return parsed.response
+    const { image } = parsed.data
 
-    const base64Data = typeof image === 'string' ? image.replace(/^data:.*?;base64,/, '') : image
+    const base64Data = image.replace(/^data:.*?;base64,/, '')
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
@@ -43,4 +44,4 @@ export async function POST(request: Request) {
     console.error('Gemini OCR error:', error)
     return NextResponse.json({ error: error.message || apiMsg(locale, 'ocrFailed') }, { status: 500 })
   }
-}
+})
