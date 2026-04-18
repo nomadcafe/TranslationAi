@@ -6,6 +6,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import { neon } from '@neondatabase/serverless'
 import bcrypt from 'bcryptjs'
 import { DEFAULT_PUBLIC_LOCALE } from '@/lib/i18n/app-locale'
+import { FREE_QUOTA } from '@/lib/quota-plans'
 
 const databaseUrl = process.env.DATABASE_URL?.trim()
 const sql = databaseUrl ? neon(databaseUrl) : null
@@ -29,18 +30,15 @@ const providers: AuthOptions['providers'] = [
 
         try {
           const result = await sql`
-            SELECT * FROM auth_users WHERE email = ${credentials.email}
+            SELECT id, email, name, password_hash FROM auth_users WHERE email = ${credentials.email}
           `
           const user = result[0]
-          console.log('查询到的用户数据:', user)
 
           if (!user || !user.password_hash) {
             throw new Error('Invalid email or password')
           }
 
           const isValid = await bcrypt.compare(credentials.password, user.password_hash)
-          console.log('密码比较结果:', isValid)
-          
           if (!isValid) {
             throw new Error('Invalid email or password')
           }
@@ -48,10 +46,10 @@ const providers: AuthOptions['providers'] = [
           return {
             id: user.id,
             email: user.email,
-            name: user.name || null
+            name: user.name || null,
           }
         } catch (error) {
-          console.error('登录验证错误:', error)
+          console.error('[auth] authorize error:', error instanceof Error ? error.message : error)
           throw new Error('Authentication server error, please try again later')
         }
       }
@@ -109,104 +107,90 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (!user.email) return false
-
       if (!sql) {
-        console.error('NextAuth signIn: DATABASE_URL is not set')
+        console.error('[auth] signIn: DATABASE_URL is not set')
         return false
       }
+      // Credentials logins are already validated in authorize().
+      if (!account || account.provider === 'credentials') return true
+
+      const provider = account.provider
+      if (provider !== 'github' && provider !== 'google') return true
+      const providerIdField = provider === 'github' ? 'github_id' : 'google_id'
+      const incomingId = account.providerAccountId
+      if (!incomingId) return false
 
       try {
-        // Look up existing credentials user.
-        const users = await sql`
-          SELECT id, email FROM auth_users
-          WHERE email = ${user.email}
-        `
+        const existing = await sql`
+          SELECT id, github_id, google_id FROM auth_users WHERE email = ${user.email}
+        ` as { id: number; github_id: string | null; google_id: string | null }[]
 
-        // First OAuth sign-in: provision auth_users row.
-        if (users.length === 0 && account?.providerAccountId) {
-          if (account.provider === 'github') {
+        // First-time OAuth sign-in for this email – provision a fresh row.
+        if (existing.length === 0) {
+          if (provider === 'github') {
             await sql`
-              INSERT INTO auth_users (
-                email,
-                name,
-                github_id,
-                text_quota,
-                image_quota,
-                pdf_quota,
-                speech_quota,
-                video_quota,
-                created_at,
-                updated_at
-              ) VALUES (
-                ${user.email},
-                ${user.name},
-                ${account.providerAccountId},
-                -1,
-                5,
-                3,
-                2,
-                1,
-                CURRENT_TIMESTAMP,
-                CURRENT_TIMESTAMP
-              )
+              INSERT INTO auth_users (email, name, github_id, text_quota, image_quota, pdf_quota, speech_quota, video_quota)
+              VALUES (${user.email}, ${user.name}, ${incomingId},
+                      ${FREE_QUOTA.text_quota}, ${FREE_QUOTA.image_quota}, ${FREE_QUOTA.pdf_quota},
+                      ${FREE_QUOTA.speech_quota}, ${FREE_QUOTA.video_quota})
             `
           } else {
             await sql`
-              INSERT INTO auth_users (
-                email,
-                name,
-                google_id,
-                text_quota,
-                image_quota,
-                pdf_quota,
-                speech_quota,
-                video_quota,
-                created_at,
-                updated_at
-              ) VALUES (
-                ${user.email},
-                ${user.name},
-                ${account.providerAccountId},
-                -1,
-                5,
-                3,
-                2,
-                1,
-                CURRENT_TIMESTAMP,
-                CURRENT_TIMESTAMP
-              )
+              INSERT INTO auth_users (email, name, google_id, text_quota, image_quota, pdf_quota, speech_quota, video_quota)
+              VALUES (${user.email}, ${user.name}, ${incomingId},
+                      ${FREE_QUOTA.text_quota}, ${FREE_QUOTA.image_quota}, ${FREE_QUOTA.pdf_quota},
+                      ${FREE_QUOTA.speech_quota}, ${FREE_QUOTA.video_quota})
             `
           }
+          return true
         }
 
+        // Row already exists – enforce strict linkage to avoid cross-provider account takeover.
+        const row = existing[0]
+        const currentProviderId = provider === 'github' ? row.github_id : row.google_id
+
+        if (currentProviderId === incomingId) {
+          // Returning OAuth user – OK.
+          return true
+        }
+
+        if (currentProviderId !== null) {
+          // A different OAuth identity is already bound to this email.
+          console.warn(`[auth] Rejected ${provider} sign-in: email already linked to a different ${providerIdField}`)
+          return false
+        }
+
+        // No OAuth id yet for this provider – first-time linking to an existing row.
+        if (provider === 'github') {
+          await sql`UPDATE auth_users SET github_id = ${incomingId}, updated_at = CURRENT_TIMESTAMP WHERE id = ${row.id}`
+        } else {
+          await sql`UPDATE auth_users SET google_id = ${incomingId}, updated_at = CURRENT_TIMESTAMP WHERE id = ${row.id}`
+        }
         return true
       } catch (error) {
-        console.error('Error in signIn callback:', error)
+        console.error('[auth] signIn callback error:', error instanceof Error ? error.message : error)
         return false
       }
     },
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
+      // Persist the DB id on the token so the session callback does not need a lookup.
+      if (user) token.id = user.id
+      if (!token.id && token.email && sql) {
+        try {
+          const rows = await sql`SELECT id FROM auth_users WHERE email = ${token.email}` as { id: number }[]
+          if (rows.length > 0) token.id = rows[0].id
+        } catch (e) {
+          console.error('[auth] jwt callback DB error:', e instanceof Error ? e.message : e)
+        }
       }
       return token
     },
-    async session({ session }) {
-      if (session.user?.email && sql) {
-        try {
-          const users = await sql`
-          SELECT id
-          FROM auth_users
-          WHERE email = ${session.user.email}
-        `
-          if (users.length > 0) {
-            session.user.id = users[0].id
-          }
-        } catch (e) {
-          console.error('NextAuth session callback DB error:', e)
-        }
+    async session({ session, token }) {
+      // Read id straight from the JWT – no DB round-trip per request.
+      if (session.user && token.id) {
+        session.user.id = token.id as number
       }
       return session
-    }
-  }
-} 
+    },
+  },
+}

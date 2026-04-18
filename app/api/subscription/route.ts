@@ -69,9 +69,8 @@ export async function POST(req: Request) {
       success_url: `${origin}/profile?subscription=success`,
       cancel_url: `${origin}/pricing?canceled=true`,
       subscription_data: {
-        metadata: {
-          userId: session.user.id,
-        },
+        // Use the authoritative DB id rather than session.user.id (which may be string or number).
+        metadata: { userId: String(dbUser.id) },
       },
     })
 

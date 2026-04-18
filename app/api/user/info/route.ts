@@ -187,8 +187,7 @@ export async function GET() {
         updated_at: user.updated_at
       },
       subscription: {
-        stripe_customer_id: user.stripe_customer_id,
-        stripe_subscription_id: user.stripe_subscription_id,
+        // stripe_customer_id and stripe_subscription_id are server-only internals.
         stripe_price_id: user.stripe_price_id,
         stripe_current_period_end: user.stripe_current_period_end
       },

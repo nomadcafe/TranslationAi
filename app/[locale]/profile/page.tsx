@@ -26,8 +26,6 @@ interface UserInfo {
     updated_at: string;
   };
   subscription: {
-    stripe_customer_id: string | null;
-    stripe_subscription_id: string | null;
     stripe_price_id: string | null;
     stripe_current_period_end: string | null;
   };
@@ -65,22 +63,9 @@ export default function ProfilePage() {
   // Fetch /api/user/info for the signed-in user.
   const fetchUserInfo = async () => {
     try {
-      console.log('开始获取用户信息')
       const response = await apiFetch('/api/user/info')
       const data = await response.json()
       if (response.ok) {
-        console.log('获取到的用户信息:', {
-          id: data.user.id,
-          email: data.user.email,
-          subscription: {
-            customerId: data.subscription.stripe_customer_id,
-            subscriptionId: data.subscription.stripe_subscription_id,
-            priceId: data.subscription.stripe_price_id,
-            currentPeriodEnd: data.subscription.stripe_current_period_end
-          },
-          quota: data.quota,
-          usage: data.usage
-        })
         setUserInfo(data)
       } else {
         console.error('获取用户信息失败:', data.error)
@@ -316,22 +301,7 @@ export default function ProfilePage() {
           </div>
           
           <div className="space-y-4">
-            {userInfo.subscription.stripe_customer_id && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="p-4 bg-muted rounded-lg">
-                  <div className="text-sm text-muted-foreground mb-1">{t('auth.profile.subscription.customerId')}</div>
-                  <div className="text-lg font-medium">
-                    {userInfo.subscription.stripe_customer_id}
-                  </div>
-                </div>
-                <div className="p-4 bg-muted rounded-lg">
-                  <div className="text-sm text-muted-foreground mb-1">{t('auth.profile.subscription.subscriptionId')}</div>
-                  <div className="text-lg font-medium">
-                    {userInfo.subscription.stripe_subscription_id || '-'}
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Stripe customer/subscription IDs are internal identifiers and no longer exposed in the UI. */}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {QUOTA_TYPES.map(type => (

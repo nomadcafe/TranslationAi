@@ -31,10 +31,9 @@ export async function GET(request: Request) {
     const result = await client.assumeRole({
       roleArn: process.env.ALIYUN_RAM_ROLE_ARN,
       roleSessionName: 'video-upload',
-      durationSeconds: 900
+      // 1 hour – short enough to limit blast radius, long enough for large uploads on slow networks.
+      durationSeconds: 3600,
     })
-
-    console.log('STS 响应成功')
 
     if (!result.body || !result.body.credentials) {
       console.error('无效的 STS 响应结构:', result)
