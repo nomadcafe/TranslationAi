@@ -4,10 +4,21 @@ import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { parseJson } from '@/lib/server/validate'
 import { ImageBody } from '@/lib/validation/schemas'
 import { withAuth } from '@/lib/server/with-auth'
+import { checkRateLimit } from '@/lib/server/rate-limit'
+import { isAbortError } from '@/lib/server/openai-compat-translate'
 
 export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
+  const signal = request.signal
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'default')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      )
+    }
+
     const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
 
@@ -28,6 +39,7 @@ export const POST = withAuth(async (request, auth) => {
         ? '请提取图片中的所有文字，以纯文本返回。尽量保持原有结构与版式；如有多语言请全部保留。'
         : 'Extract all text from this image as plain text. Preserve structure and layout. If multiple languages appear, keep them all.'
 
+    if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
     const result = await model.generateContent([
       {
         inlineData: {
@@ -37,11 +49,21 @@ export const POST = withAuth(async (request, auth) => {
       },
       instruction,
     ])
+    if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
     const response = await result.response
     const text = response.text()
     return NextResponse.json({ text })
-  } catch (error: any) {
-    console.error('Gemini OCR error:', error)
-    return NextResponse.json({ error: error.message || apiMsg(locale, 'ocrFailed') }, { status: 500 })
+  } catch (error) {
+    if (isAbortError(error) || signal.aborted) {
+      return NextResponse.json({ error: 'aborted' }, { status: 499 })
+    }
+    console.error(
+      `[ocr/gemini] userId=${auth.userId} error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    )
+    return NextResponse.json(
+      { error: apiMsg(locale, 'ocrFailed') },
+      { status: 500 },
+    )
   }
 })

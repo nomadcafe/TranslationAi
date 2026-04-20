@@ -3,10 +3,21 @@ import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { parseJson } from '@/lib/server/validate'
 import { TranslateTargetLangBody } from '@/lib/validation/schemas'
 import { withAuth } from '@/lib/server/with-auth'
+import { checkRateLimit } from '@/lib/server/rate-limit'
+import { isAbortError } from '@/lib/server/openai-compat-translate'
 
-export const POST = withAuth(async (request) => {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
+  const signal = request.signal
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'translate')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      )
+    }
+
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: apiMsg(locale, 'serviceNotConfigured') }, { status: 500 })
 
@@ -41,20 +52,33 @@ Rules:
 - Preserve paragraphs and line breaks
 - Preserve punctuation habits`
 
+    // Gemini SDK (v0.x) lacks AbortSignal support; best-effort pre-check.
+    if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.1,
         topK: 1,
         topP: 0.1,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 8000,
       },
     })
+    if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
     const response = await result.response
     const improved = response.text()
-    return NextResponse.json({ text: improved })
-  } catch (error: any) {
-    console.error('Improve error:', error)
-    return NextResponse.json({ error: error.message || apiMsg(locale, 'improveFailed') }, { status: 500 })
+    const truncated = response.candidates?.[0]?.finishReason === 'MAX_TOKENS'
+    return NextResponse.json({ text: improved, truncated })
+  } catch (error) {
+    if (isAbortError(error) || request.signal.aborted) {
+      return NextResponse.json({ error: 'aborted' }, { status: 499 })
+    }
+    console.error(
+      `[improve] userId=${auth.userId} error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    )
+    return NextResponse.json(
+      { error: apiMsg(locale, 'improveFailed') },
+      { status: 500 },
+    )
   }
 })

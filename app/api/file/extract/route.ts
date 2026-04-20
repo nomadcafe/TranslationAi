@@ -6,6 +6,7 @@ import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { parseJson } from '@/lib/server/validate'
 import { FileExtractBody } from '@/lib/validation/schemas'
 import { withAuth } from '@/lib/server/with-auth'
+import { checkRateLimit } from '@/lib/server/rate-limit'
 
 import { getKimiApiBaseUrl } from '@/lib/server/kimi-api-base'
 
@@ -340,6 +341,14 @@ async function processPdfWithMistral(file: string, filename: string, locale: App
 export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'default')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      )
+    }
+
     const quota = await checkAndRecordUsage(auth.userId, 'pdf', locale)
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
 
@@ -400,34 +409,40 @@ export const POST = withAuth(async (request, auth) => {
       }
 
       return NextResponse.json({ text: result })
-    } catch (error: any) {
-      console.error('处理步骤错误:', error)
-      const msg = String(error?.message || '')
-      if (error.name === 'AbortError' || /timeout|超时/i.test(msg)) {
+    } catch (error: unknown) {
+      console.error(
+        `[file/extract] userId=${auth.userId} service=${service} error:`,
+        error instanceof Error ? (error.stack ?? error.message) : error,
+      )
+      const err = error as { name?: string; message?: string }
+      const msg = String(err?.message ?? '')
+      if (err?.name === 'AbortError' || /timeout|超时/i.test(msg)) {
         return NextResponse.json(
           { error: apiMsg(locale, 'processingTimeout') },
           { status: 503 }
         )
       }
-      
-      // Map certain errors to 413.
+
       if (msg === apiMsg(locale, 'fileSizeExceeded') || msg === apiMsg(locale, 'responseTooLarge')) {
         return NextResponse.json(
           { error: msg },
           { status: 413 }
         )
       }
-      
+
       return NextResponse.json(
-        { error: error.message || apiMsg(locale, 'pdfExtractFailed') },
+        { error: apiMsg(locale, 'pdfExtractFailed') },
         { status: 500 }
       )
     }
-  } catch (error: any) {
-    console.error('PDF处理错误:', error)
+  } catch (error: unknown) {
+    console.error(
+      `[file/extract] userId=${auth.userId} outer error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    )
     return NextResponse.json(
-      { error: error.message || apiMsg(locale, 'pdfExtractFailed') },
-      { status: error.status || 500 }
+      { error: apiMsg(locale, 'pdfExtractFailed') },
+      { status: 500 }
     )
   }
 })

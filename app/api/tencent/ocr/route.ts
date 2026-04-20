@@ -4,6 +4,7 @@ import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
 import { parseJson } from '@/lib/server/validate';
 import { ImageBody } from '@/lib/validation/schemas';
 import { withAuth } from '@/lib/server/with-auth';
+import { checkRateLimit } from '@/lib/server/rate-limit';
 
 const tencentcloud = require("tencentcloud-sdk-nodejs");
 const OcrClient = tencentcloud.ocr.v20181119.Client;
@@ -11,6 +12,14 @@ const OcrClient = tencentcloud.ocr.v20181119.Client;
 export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'default');
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, message: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      );
+    }
+
     const quota = await checkAndRecordUsage(auth.userId, 'image', locale);
     if (!quota.allowed) return NextResponse.json({ success: false, message: quota.error }, { status: 403 });
 
@@ -44,24 +53,27 @@ export const POST = withAuth(async (request, auth) => {
     });
 
     if (!result || !result.TextDetections) {
-      throw new Error(apiMsg(locale, 'ocrGenericFailed'));
+      throw new Error('ocrGenericFailed');
     }
 
-    const textLines = result.TextDetections.map((item: any) => item.DetectedText).filter(Boolean);
+    const textLines = result.TextDetections.map((item: { DetectedText?: string }) => item.DetectedText).filter(Boolean);
     const text = textLines.join('\n');
 
     return NextResponse.json({
       success: true,
       result: text
     });
-  } catch (error: any) {
-    console.error('腾讯云 OCR 错误:', error);
+  } catch (error) {
+    console.error(
+      `[ocr/tencent-legacy] userId=${auth.userId} error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    );
+    const code = (error as { code?: string })?.code
+    const messageKey = code === 'AuthFailure' ? 'tencentAuthFailure' : 'ocrGenericFailed'
     return NextResponse.json(
-      { 
-        success: false, 
-        message: error.code === 'AuthFailure'
-          ? apiMsg(locale, 'tencentAuthFailure')
-          : (error.message || apiMsg(locale, 'ocrGenericFailed'))
+      {
+        success: false,
+        message: apiMsg(locale, messageKey)
       },
       { status: 500 }
     );

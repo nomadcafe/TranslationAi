@@ -6,6 +6,7 @@ import { aliyunVideorecogEndpoint } from '@/lib/server/aliyun-region'
 import { parseJson } from '@/lib/server/validate'
 import { VideoUrlBody } from '@/lib/validation/schemas'
 import { withAuth } from '@/lib/server/with-auth'
+import { checkRateLimit } from '@/lib/server/rate-limit'
 
 interface AsyncJobResult {
   RequestId: string
@@ -15,6 +16,14 @@ interface AsyncJobResult {
 export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'default')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { message: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      )
+    }
+
     const quota = await checkAndRecordUsage(auth.userId, 'video', locale)
     if (!quota.allowed) return NextResponse.json({ message: quota.error }, { status: 403 })
 
@@ -64,21 +73,21 @@ export const POST = withAuth(async (request, auth) => {
         taskId: result.RequestId,
         message: result.Message
       })
-    } catch (createError: any) {
-      console.error('创建任务错误详情:', {
-        name: createError.name,
-        message: createError.message,
-        code: createError.code,
-        requestId: createError.RequestId,
-        stack: createError.stack
-      })
-      throw new Error(`${apiMsg(locale, 'videoTaskCreateFailed')}: ${createError.message}`)
+    } catch (createError: unknown) {
+      console.error(
+        `[video-ocr/create] userId=${auth.userId} upstream error:`,
+        createError instanceof Error ? (createError.stack ?? createError.message) : createError,
+      )
+      throw new Error('upstream')
     }
 
-  } catch (error: any) {
-    console.error('处理请求错误:', error)
+  } catch (error) {
+    console.error(
+      `[video-ocr/create] userId=${auth.userId} error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    )
     return NextResponse.json(
-      { message: error.message || apiMsg(locale, 'videoTaskCreateFailed') },
+      { message: apiMsg(locale, 'videoTaskCreateFailed') },
       { status: 500 }
     )
   }
