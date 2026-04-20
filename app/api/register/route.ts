@@ -3,6 +3,8 @@ import { neon } from '@neondatabase/serverless'
 import bcrypt from 'bcryptjs'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { RegisterBody } from '@/lib/validation/schemas'
+import { checkRateLimitByIp } from '@/lib/server/rate-limit'
+import { getClientIp } from '@/lib/server/client-ip'
 
 const databaseUrl = process.env.DATABASE_URL?.trim()
 const sql = databaseUrl ? neon(databaseUrl) : null
@@ -14,6 +16,15 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: apiMsg(locale, 'serviceNotConfigured') },
       { status: 503 }
+    )
+  }
+
+  const ip = getClientIp(req.headers)
+  const rateCheck = await checkRateLimitByIp(ip, 'register')
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+      { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
     )
   }
 
@@ -45,7 +56,7 @@ export async function POST(req: Request) {
 
     const result = await sql`
       INSERT INTO auth_users (
-        email, 
+        email,
         password_hash,
         text_quota,
         image_quota,
@@ -54,7 +65,7 @@ export async function POST(req: Request) {
         video_quota
       )
       VALUES (
-        ${email}, 
+        ${email},
         ${hashedPassword},
         -1,
         5,
@@ -66,7 +77,7 @@ export async function POST(req: Request) {
     `
 
     return NextResponse.json(
-      { 
+      {
         message: apiMsg(locale, 'registerSuccess'),
         user: {
           id: result[0].id,
@@ -75,10 +86,13 @@ export async function POST(req: Request) {
       },
       { status: 201 }
     )
-  } catch (error: any) {
-    console.error('Register error:', error?.message ?? error)
+  } catch (error) {
+    console.error(
+      '[register] error:',
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    )
     return NextResponse.json(
-      { error: error.message || apiMsg(locale, 'registerFailed') },
+      { error: apiMsg(locale, 'registerFailed') },
       { status: 500 }
     )
   }
