@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import RPCClient from '@alicloud/pop-core'
 import { aliyunVideorecogEndpoint } from '@/lib/server/aliyun-region'
-import { getRequestLocale } from '@/lib/server/request-i18n'
+import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { parseJson } from '@/lib/server/validate'
 import { TaskIdBody } from '@/lib/validation/schemas'
 import { withAuth } from '@/lib/server/with-auth'
+import { checkRateLimit } from '@/lib/server/rate-limit'
 
 interface VideoOCRResult {
   OcrResults?: Array<{
@@ -41,10 +42,18 @@ interface AsyncJobQueryResult {
   }
 }
 
-export const POST = withAuth(async (request) => {
+export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
 
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'default')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { message: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      )
+    }
+
     const parsed = await parseJson(request, TaskIdBody, locale, { errorField: 'message' })
     if (!parsed.ok) return parsed.response
     const { taskId } = parsed.data
@@ -220,21 +229,21 @@ export const POST = withAuth(async (request) => {
           }, { status: 202 })
       }
 
-    } catch (queryError: any) {
-      console.error('查询任务错误详情:', {
-        name: queryError.name,
-        message: queryError.message,
-        code: queryError.code,
-        requestId: queryError.RequestId,
-        stack: queryError.stack
-      })
-      throw new Error(`查询视频识别任务失败: ${queryError.message}`)
+    } catch (queryError: unknown) {
+      console.error(
+        `[video-ocr/status] userId=${auth.userId} upstream error:`,
+        queryError instanceof Error ? (queryError.stack ?? queryError.message) : queryError,
+      )
+      throw new Error('upstream')
     }
 
-  } catch (error: any) {
-    console.error('处理请求错误:', error)
+  } catch (error) {
+    console.error(
+      `[video-ocr/status] userId=${auth.userId} error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    )
     return NextResponse.json(
-      { message: error.message || '查询视频识别任务失败' },
+      { message: apiMsg(locale, 'videoAnalysisFailed') },
       { status: 500 }
     )
   }

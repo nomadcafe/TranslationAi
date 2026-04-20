@@ -5,10 +5,19 @@ import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { parseJson } from '@/lib/server/validate'
 import { FramesBody } from '@/lib/validation/schemas'
 import { withAuth } from '@/lib/server/with-auth'
+import { checkRateLimit } from '@/lib/server/rate-limit'
 
 export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'default')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      )
+    }
+
     const quota = await checkAndRecordUsage(auth.userId, 'video', locale)
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
 
@@ -18,8 +27,14 @@ export const POST = withAuth(async (request, auth) => {
 
     const text = await zhipuAnalyzeVideo(frames, locale)
     return NextResponse.json({ text })
-  } catch (error: any) {
-    console.error('Z.AI analyze video error:', error)
-    return NextResponse.json({ error: error.message || apiMsg(locale, 'videoAnalysisFailed') }, { status: 500 })
+  } catch (error) {
+    console.error(
+      `[zhipu/analyze-video] userId=${auth.userId} error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    )
+    return NextResponse.json(
+      { error: apiMsg(locale, 'videoAnalysisFailed') },
+      { status: 500 },
+    )
   }
 })

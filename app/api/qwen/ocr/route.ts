@@ -5,12 +5,23 @@ import { qwenChatCompletionsUrl } from '@/lib/server/qwen-api-base'
 import { parseJson } from '@/lib/server/validate'
 import { ImageBody } from '@/lib/validation/schemas'
 import { withAuth } from '@/lib/server/with-auth'
+import { checkRateLimit } from '@/lib/server/rate-limit'
+import { isAbortError } from '@/lib/server/openai-compat-translate'
 
 export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
+  const signal = request.signal
   try {
     if (!process.env.QWEN_API_KEY?.trim()) {
       return NextResponse.json({ message: apiMsg(locale, 'serviceNotConfigured') }, { status: 503 })
+    }
+
+    const rateCheck = await checkRateLimit(auth.userId, 'default')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { message: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      )
     }
 
     const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
@@ -53,21 +64,34 @@ export const POST = withAuth(async (request, auth) => {
             ]
           }
         ]
-      })
+      }),
+      signal,
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || apiMsg(locale, 'ocrGenericFailed'))
+      // Read and discard body so server log has the raw reason without
+      // leaking it to the client.
+      const body = await response.text().catch(() => '')
+      console.error(
+        `[ocr/qwen] userId=${auth.userId} upstream ${response.status}:`,
+        body.slice(0, 500),
+      )
+      throw new Error('upstream')
     }
 
     const result = await response.json()
     const text = result.choices[0].message.content
     return NextResponse.json({ text })
-  } catch (error: any) {
-    console.error('Qwen OCR error:', error)
+  } catch (error) {
+    if (isAbortError(error) || signal.aborted) {
+      return NextResponse.json({ message: 'aborted' }, { status: 499 })
+    }
+    console.error(
+      `[ocr/qwen] userId=${auth.userId} error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    )
     return NextResponse.json(
-      { message: error.message || apiMsg(locale, 'ocrGenericFailed') },
+      { message: apiMsg(locale, 'ocrGenericFailed') },
       { status: 500 }
     )
   }

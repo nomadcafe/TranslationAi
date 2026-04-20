@@ -5,6 +5,8 @@ import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
 import { parseJson } from '@/lib/server/validate';
 import { AsrCreateBody } from '@/lib/validation/schemas';
 import { withAuth } from '@/lib/server/with-auth';
+import { checkRateLimit } from '@/lib/server/rate-limit';
+import { isAbortError } from '@/lib/server/openai-compat-translate';
 
 const endpoint = 'asr.tencentcloudapi.com';
 const service = 'asr';
@@ -14,7 +16,16 @@ const action = 'CreateRecTask';
 
 export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
+  const signal = request.signal;
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'default');
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      );
+    }
+
     const quota = await checkAndRecordUsage(auth.userId, 'speech', locale);
     if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 });
 
@@ -54,19 +65,30 @@ export const POST = withAuth(async (request, auth) => {
         'X-TC-Timestamp': timestamp.toString(),
       },
       body: JSON.stringify(params),
+      signal,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.Response?.Error?.Message || 'API request failed');
+      const body = await response.text().catch(() => '');
+      console.error(
+        `[asr/create] userId=${auth.userId} upstream ${response.status}:`,
+        body.slice(0, 500),
+      );
+      throw new Error('upstream');
     }
 
     const result = await response.json();
     return NextResponse.json(result);
-  } catch (error: any) {
-    console.error('创建识别任务失败:', error);
+  } catch (error) {
+    if (isAbortError(error) || signal.aborted) {
+      return NextResponse.json({ error: 'aborted' }, { status: 499 });
+    }
+    console.error(
+      `[asr/create] userId=${auth.userId} error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    );
     return NextResponse.json(
-      { error: error.message || apiMsg(locale, 'asrCreateTaskFailed') },
+      { error: apiMsg(locale, 'asrCreateTaskFailed') },
       { status: 500 }
     );
   }

@@ -5,6 +5,7 @@ import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { parseJson } from '@/lib/server/validate'
 import { ImageBody } from '@/lib/validation/schemas'
 import { withAuth } from '@/lib/server/with-auth'
+import { checkRateLimit } from '@/lib/server/rate-limit'
 
 const OcrClient = tencentcloud.ocr.v20181119.Client
 
@@ -43,6 +44,14 @@ const client = new OcrClient({
 export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'default')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, message: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      )
+    }
+
     const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
     if (!quota.allowed) return NextResponse.json({ success: false, message: quota.error }, { status: 403 })
 
@@ -70,11 +79,14 @@ export const POST = withAuth(async (request, auth) => {
       success: true,
       text
     })
-  } catch (error: any) {
-    console.error('腾讯云OCR错误:', error)
+  } catch (error) {
+    console.error(
+      `[ocr/tencent] userId=${auth.userId} error:`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    )
     return NextResponse.json(
-      { success: false, message: error.message || apiMsg(locale, 'ocrGenericFailed') },
+      { success: false, message: apiMsg(locale, 'ocrGenericFailed') },
       { status: 500 }
     )
   }
-}, { errorField: 'message' }) 
+}, { errorField: 'message' })
