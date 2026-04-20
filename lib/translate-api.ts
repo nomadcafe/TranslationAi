@@ -318,11 +318,11 @@ export async function translateWithStepAPI(text: string, targetLanguage: string)
     }
 
     const data = await response.json()
-    if (!data.translation) {
+    if (!data.text) {
       throw new Error('No translation result')
     }
 
-    return data.translation
+    return data.text
   } catch (error: any) {
     console.error('StepFun translation error:', error)
     throw new Error(error.message || 'Translation failed')

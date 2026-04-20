@@ -5,10 +5,26 @@ const MAX_BASE64_CHARS = 15_000_000
 const MAX_NAME_LEN = 50
 const MAX_LANG_LEN = 64
 
+export const TRANSLATE_SERVICES = [
+  'deepseek',
+  'qwen',
+  'zhipu',
+  '4o-mini',
+  'hunyuan',
+  'minimax',
+  'siliconflow',
+  'claude',
+  'claude_3_5',
+  'kimi',
+  'gemini',
+  'step',
+] as const
+export type TranslateService = (typeof TRANSLATE_SERVICES)[number]
+
 export const TranslateBody = z.object({
   text: z.string().min(1).max(MAX_TEXT_CHARS),
   targetLanguage: z.string().min(1).max(MAX_LANG_LEN),
-  service: z.string().max(32).optional(),
+  service: z.enum(TRANSLATE_SERVICES).optional(),
 })
 
 export const TranslateTargetLangBody = z.object({
