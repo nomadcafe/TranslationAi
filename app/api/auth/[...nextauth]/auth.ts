@@ -7,6 +7,8 @@ import { neon } from '@neondatabase/serverless'
 import bcrypt from 'bcryptjs'
 import { DEFAULT_PUBLIC_LOCALE } from '@/lib/i18n/app-locale'
 import { FREE_QUOTA } from '@/lib/quota-plans'
+import { checkRateLimitByIp, checkRateLimitByEmail } from '@/lib/server/rate-limit'
+import { getClientIp } from '@/lib/server/client-ip'
 
 const databaseUrl = process.env.DATABASE_URL?.trim()
 const sql = databaseUrl ? neon(databaseUrl) : null
@@ -18,7 +20,7 @@ const providers: AuthOptions['providers'] = [
         email: { label: "邮箱", type: "email" },
         password: { label: "密码", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Please enter email and password')
         }
@@ -26,6 +28,19 @@ const providers: AuthOptions['providers'] = [
         if (!sql) {
           console.error('NextAuth: DATABASE_URL is not set; credentials login unavailable.')
           throw new Error('Server is not configured for sign-in (missing DATABASE_URL)')
+        }
+
+        // Two-layer rate limit: IP blocks generic hammering from one source,
+        // email blocks distributed credential-stuffing against one account.
+        // Check email bucket first — it's the bucket an attacker cares about.
+        const emailCheck = await checkRateLimitByEmail(credentials.email, 'login_email')
+        if (!emailCheck.allowed) {
+          throw new Error('Too many attempts, please try again later')
+        }
+        const ip = req?.headers ? getClientIp(req.headers) : 'unknown'
+        const ipCheck = await checkRateLimitByIp(ip, 'login_ip')
+        if (!ipCheck.allowed) {
+          throw new Error('Too many attempts, please try again later')
         }
 
         try {

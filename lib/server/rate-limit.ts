@@ -10,9 +10,10 @@
  *    under horizontal scaling it is effectively bypassed. Suitable only for
  *    local dev or as a soft floor.
  *
- * The function is async so callers contract works regardless of backend. On
- * Upstash failures we fail open — rejecting every request on a transient Redis
- * outage would self-DoS — but the error is logged for operators.
+ * Keys are caller-supplied so the same limiter buckets can key by userId, by
+ * client IP, or by email — whichever abuse vector a given endpoint exposes.
+ * On Upstash failures we fail open (rejecting every request on a transient
+ * Redis outage would self-DoS), but the error is logged for operators.
  */
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
@@ -23,6 +24,11 @@ const CLEANUP_EVERY = 500
 
 const LIMITS: Record<string, number> = {
   translate: 30, // 30 translations per user per minute
+  // Pre-auth endpoints — keys are IP (abuse from one source) or email
+  // (targeted attack on one account); both layers apply to credentials login.
+  register: 5,
+  login_ip: 10,
+  login_email: 5,
   default: 60,
 }
 
@@ -78,11 +84,11 @@ function sweep(now: number) {
 }
 
 function inProcessCheck(
-  userId: number,
+  key: string,
   endpoint: string,
 ): { allowed: boolean; retryAfter?: number } {
   const limit = LIMITS[endpoint] ?? LIMITS.default
-  const key = `${userId}:${endpoint}`
+  const bucketKey = `${endpoint}:${key}`
   const now = Date.now()
 
   callsSinceCleanup++
@@ -91,9 +97,9 @@ function inProcessCheck(
     sweep(now)
   }
 
-  const win = windows.get(key)
+  const win = windows.get(bucketKey)
   if (!win || now >= win.resetAt) {
-    windows.set(key, { count: 1, resetAt: now + WINDOW_MS })
+    windows.set(bucketKey, { count: 1, resetAt: now + WINDOW_MS })
     return { allowed: true }
   }
 
@@ -107,14 +113,16 @@ function inProcessCheck(
 
 // --- Public API -------------------------------------------------------------
 
-export async function checkRateLimit(
-  userId: number,
-  endpoint = 'default',
-): Promise<{ allowed: boolean; retryAfter?: number }> {
+export interface RateLimitResult {
+  allowed: boolean
+  retryAfter?: number
+}
+
+async function checkByKey(key: string, endpoint: string): Promise<RateLimitResult> {
   if (upstashLimiters) {
     const limiter = upstashLimiters[endpoint] ?? upstashLimiters.default
     try {
-      const res = await limiter.limit(`u:${userId}`)
+      const res = await limiter.limit(key)
       if (res.success) return { allowed: true }
       const retryAfter = Math.max(1, Math.ceil((res.reset - Date.now()) / 1000))
       return { allowed: false, retryAfter }
@@ -128,5 +136,26 @@ export async function checkRateLimit(
       return { allowed: true }
     }
   }
-  return inProcessCheck(userId, endpoint)
+  return inProcessCheck(key, endpoint)
+}
+
+export async function checkRateLimit(
+  userId: number,
+  endpoint = 'default',
+): Promise<RateLimitResult> {
+  return checkByKey(`u:${userId}`, endpoint)
+}
+
+export async function checkRateLimitByIp(
+  ip: string,
+  endpoint = 'default',
+): Promise<RateLimitResult> {
+  return checkByKey(`ip:${ip}`, endpoint)
+}
+
+export async function checkRateLimitByEmail(
+  email: string,
+  endpoint = 'default',
+): Promise<RateLimitResult> {
+  return checkByKey(`email:${email.toLowerCase()}`, endpoint)
 }
