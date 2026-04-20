@@ -1,6 +1,4 @@
-import OpenAI from 'openai';
-import { NextResponse } from 'next/server';
-import { sign } from '@/lib/server/tencent-sign';
+import { NextResponse, after } from 'next/server';
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { withAuth } from '@/lib/server/with-auth';
@@ -15,382 +13,254 @@ import {
 } from '@/lib/server/minimax-api-base';
 import { translateWithAnthropicClaude } from '@/lib/server/anthropic-claude';
 import { parseJson } from '@/lib/server/validate';
-import { TranslateBody } from '@/lib/validation/schemas';
+import { TranslateBody, type TranslateService } from '@/lib/validation/schemas';
 import { saveTranslation } from '@/lib/server/translations';
+import {
+  openAICompatTranslate,
+  isAbortError,
+  type TranslationResult,
+} from '@/lib/server/openai-compat-translate';
 
-export const POST = withAuth(async (request, auth) => {
-  const locale = getRequestLocale(request);
-  try {
-    const parsed = await parseJson(request, TranslateBody, locale);
-    if (!parsed.ok) return parsed.response;
-    const { text, targetLanguage, service } = parsed.data;
-
-    const rateCheck = checkRateLimit(auth.userId, 'translate')
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
-        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } }
-      )
-    }
-
-    let translatedText;
-
-    try {
-      switch (service) {
-        case 'deepseek':
-          translatedText = await translateWithDeepSeekAPI(text, targetLanguage);
-          break;
-        case 'qwen':
-          translatedText = await translateWithQwenAPI(text, targetLanguage);
-          break;
-        case 'zhipu':
-          translatedText = await translateWithZhipuAPI(text, targetLanguage);
-          break;
-        case '4o-mini':
-          translatedText = await translateWith4oMiniAPI(text, targetLanguage);
-          break;
-        case 'hunyuan':
-          translatedText = await translateWithHunyuanAPI(text, targetLanguage);
-          break;
-        case 'minimax':
-          translatedText = await translateWithMinimaxAPI(text, targetLanguage);
-          break;
-        case 'siliconflow':
-          translatedText = await translateWithSiliconFlowAPI(text, targetLanguage);
-          break;
-        case 'claude':
-        case 'claude_3_5':
-          translatedText = await translateWithClaudeAPI(text, targetLanguage);
-          break;
-        case 'kimi':
-          translatedText = await translateWithKimiAPI(text, targetLanguage);
-          break;
-        case 'gemini':
-          translatedText = await translateWithGeminiAPI(text, targetLanguage);
-          break;
-        case 'step':
-          translatedText = await translateWithStepAPI(text, targetLanguage);
-          break;
-        default:
-          translatedText = await translateWithDeepSeekAPI(text, targetLanguage);
-      }
-    } catch (serviceError: any) {
-      console.error(`${service} translation service error:`, serviceError);
-      // Fallback to DeepSeek when the primary translator errors.
-      if (service !== 'deepseek') {
-        console.log('Trying DeepSeek as fallback service...');
-        translatedText = await translateWithDeepSeekAPI(text, targetLanguage);
-      } else {
-        throw serviceError;
-      }
-    }
-
-    if (typeof translatedText === 'string' && translatedText.length > 0) {
-      void saveTranslation({
-        userId: auth.userId,
-        sourceText: text,
-        translatedText,
-        targetLanguage,
-        service: typeof service === 'string' ? service : null,
-      })
-    }
-
-    return NextResponse.json({ text: translatedText });
-  } catch (error: any) {
-    console.error('Translation error:', error);
-    return NextResponse.json({ error: error.message || apiMsg(locale, 'translateFailed') }, { status: 500 });
-  }
-})
-
-async function translateWithDeepSeekAPI(text: string, targetLanguage: string) {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) {
-    throw new Error('DeepSeek API key not found');
-  }
-
-  const openai = new OpenAI({
-    apiKey: apiKey,
-    baseURL: 'https://api.deepseek.com/v1'
-  });
-
-  const response = await openai.chat.completions.create({
-    model: 'deepseek-chat',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a professional translator. Translate the following text to ${targetLanguage}. Only return the translated text, no explanations.`
-      },
-      {
-        role: 'user',
-        content: text
-      }
-    ],
-    temperature: 0.3,
-    max_tokens: 2000
-  });
-
-  return response.choices[0].message.content || '';
-}
-
-async function translateWithQwenAPI(text: string, targetLanguage: string) {
-  const apiKey = process.env.QWEN_API_KEY;
-  if (!apiKey) {
-    throw new Error('Qwen API key not found');
-  }
-
-  const openai = new OpenAI({
-    apiKey: apiKey,
-    baseURL: getQwenCompatibleBaseUrl(),
-  });
-
-  const response = await openai.chat.completions.create({
-    model: 'qwen-max',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a professional translator. Translate the following text to ${targetLanguage}. Only return the translated text, no explanations.`
-      },
-      {
-        role: 'user',
-        content: text
-      }
-    ],
-    temperature: 0.3,
-    max_tokens: 2000
-  });
-
-  return response.choices[0].message.content || '';
-}
-
-async function translateWithZhipuAPI(text: string, targetLanguage: string) {
-  const apiKey = process.env.ZHIPU_API_KEY;
-  if (!apiKey) {
-    throw new Error('Z.AI API key not found');
-  }
-
-  const openai = new OpenAI({
-    apiKey: apiKey,
-    baseURL: ZHIPU_PAAS_BASE,
-  });
-
-  const response = await openai.chat.completions.create({
-    model: ZHIPU_TEXT_MODEL,
-    messages: [
-      {
-        role: 'system',
-        content: `You are a professional translator. Translate the following text to ${targetLanguage}. Only return the translated text, no explanations.`
-      },
-      {
-        role: 'user',
-        content: text
-      }
-    ],
-    temperature: 0.3,
-    max_tokens: 2000
-  });
-
-  return response.choices[0].message.content || '';
-}
-
-async function translateWith4oMiniAPI(text: string, targetLanguage: string) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error('OpenAI API key not found');
-  }
-
-  const openai = new OpenAI({
-    apiKey: apiKey,
-    baseURL: 'https://api.openai.com/v1'
-  });
-
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a professional translator. Translate the following text to ${targetLanguage}. Only return the translated text, no explanations.`
-      },
-      {
-        role: 'user',
-        content: text
-      }
-    ],
-    temperature: 0.3,
-    max_tokens: 2000
-  });
-
-  return response.choices[0].message.content || '';
-}
-
-async function translateWithHunyuanAPI(text: string, targetLanguage: string) {
-  const apiKey = process.env.TENCENT_API_KEY;
-  if (!apiKey) {
-    throw new Error('Tencent API key not found');
-  }
-
-  const openai = new OpenAI({
-    apiKey: apiKey,
-    baseURL: 'https://api.hunyuan.cloud.tencent.com/v1'
-  });
-
-  const response = await openai.chat.completions.create({
-    model: 'hunyuan-turbo',
-    messages: [
-      {
-        role: 'system',
-        content: `你是一个专业的翻译助手，请直接翻译文本，不要添加任何解释。`
-      },
-      {
-        role: 'user',
-        content: `将以下文本翻译成${targetLanguage}：\n\n${text}`
-      }
-    ],
-    temperature: 0.1,
-    top_p: 0.7,
-    // @ts-expect-error key is not yet public
-    enable_enhancement: true
-  });
-
-  return response.choices[0].message.content || '';
-}
-
-async function translateWithMinimaxAPI(text: string, targetLanguage: string) {
-  const apiKey = getMinimaxApiKey();
-  if (!apiKey) {
-    throw new Error('MiniMax API key not found');
-  }
-
-  const openai = new OpenAI({
-    apiKey,
-    baseURL: getMinimaxOpenAiBaseUrl(),
-  });
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: getMinimaxChatModel(),
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional translator. Translate the text directly without any explanations.'
-        },
-        {
-          role: 'user',
-          content: `Translate to ${targetLanguage}:\n${text}`
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 2000,
-    });
-
-    return completion.choices[0].message.content;
-  } catch (error: any) {
-    console.error('MiniMax translation error:', error);
-    throw new Error(error.message || '翻译失败');
-  }
-}
-
-async function translateWithSiliconFlowAPI(text: string, targetLanguage: string) {
-  const apiKey = process.env.SILICONFLOW_API_KEY;
-  if (!apiKey) {
-    throw new Error('SiliconFlow API key not found');
-  }
-
-  const openai = new OpenAI({
-    apiKey: apiKey,
-    baseURL: 'https://api.siliconflow.com/v1'
-  });
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: 'meta-llama/Llama-3.3-70B-Instruct',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional translator. Translate the text directly without any explanations.'
-        },
-        {
-          role: 'user',
-          content: `Translate to ${targetLanguage}:\n${text}`
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 2000,
-    });
-
-    return completion.choices[0].message.content;
-  } catch (error: any) {
-    console.error('SiliconFlow translation error:', error);
-    throw new Error(error.message || '翻译失败');
-  }
-}
-
-async function translateWithClaudeAPI(text: string, targetLanguage: string) {
-  return translateWithAnthropicClaude(
-    text,
-    targetLanguage,
-    'You are a professional translator. Translate the text directly without any explanations.'
+function translateWithDeepSeekAPI(text: string, targetLanguage: string, signal: AbortSignal) {
+  return openAICompatTranslate(
+    {
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseURL: 'https://api.deepseek.com/v1',
+      model: 'deepseek-chat',
+    },
+    text, targetLanguage, signal,
   );
 }
 
-async function translateWithKimiAPI(text: string, targetLanguage: string) {
-  const apiKey = process.env.KIMI_API_KEY;
-  if (!apiKey) throw new Error('Kimi API key not found');
-  const openai = new OpenAI({ apiKey, baseURL: getKimiApiBaseUrl() });
-  const completion = await openai.chat.completions.create({
-    model: 'moonshot-v1-128k',
-    messages: [
-      { role: 'system', content: `You are a professional translator. Translate the following text to ${targetLanguage}. Keep the original format and style.` },
-      { role: 'user', content: text }
-    ],
-    temperature: 0.3,
-    max_tokens: 2000
-  });
-  const t = completion.choices[0]?.message?.content;
-  if (!t) throw new Error('No translation result');
-  return t;
+function translateWithQwenAPI(text: string, targetLanguage: string, signal: AbortSignal) {
+  return openAICompatTranslate(
+    {
+      apiKey: process.env.QWEN_API_KEY,
+      baseURL: getQwenCompatibleBaseUrl(),
+      model: 'qwen-max',
+    },
+    text, targetLanguage, signal,
+  );
 }
 
-async function translateWithGeminiAPI(text: string, targetLanguage: string) {
+function translateWithZhipuAPI(text: string, targetLanguage: string, signal: AbortSignal) {
+  return openAICompatTranslate(
+    {
+      apiKey: process.env.ZHIPU_API_KEY,
+      baseURL: ZHIPU_PAAS_BASE,
+      model: ZHIPU_TEXT_MODEL,
+    },
+    text, targetLanguage, signal,
+  );
+}
+
+function translateWith4oMiniAPI(text: string, targetLanguage: string, signal: AbortSignal) {
+  return openAICompatTranslate(
+    {
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: 'https://api.openai.com/v1',
+      model: 'gpt-4o-mini',
+    },
+    text, targetLanguage, signal,
+  );
+}
+
+function translateWithHunyuanAPI(text: string, targetLanguage: string, signal: AbortSignal) {
+  return openAICompatTranslate(
+    {
+      apiKey: process.env.TENCENT_API_KEY,
+      baseURL: 'https://api.hunyuan.cloud.tencent.com/v1',
+      model: 'hunyuan-turbo',
+      systemPrompt: '你是一个专业的翻译助手，请直接翻译文本，不要添加任何解释。',
+      userPrompt: `将以下文本翻译成${targetLanguage}：\n\n${text}`,
+      temperature: 0.1,
+      extraBody: { top_p: 0.7, enable_enhancement: true },
+    },
+    text, targetLanguage, signal,
+  );
+}
+
+function translateWithMinimaxAPI(text: string, targetLanguage: string, signal: AbortSignal) {
+  return openAICompatTranslate(
+    {
+      apiKey: getMinimaxApiKey(),
+      baseURL: getMinimaxOpenAiBaseUrl(),
+      model: getMinimaxChatModel(),
+      systemPrompt: 'You are a professional translator. Translate the text directly without any explanations.',
+      userPrompt: `Translate to ${targetLanguage}:\n${text}`,
+    },
+    text, targetLanguage, signal,
+  );
+}
+
+function translateWithSiliconFlowAPI(text: string, targetLanguage: string, signal: AbortSignal) {
+  return openAICompatTranslate(
+    {
+      apiKey: process.env.SILICONFLOW_API_KEY,
+      baseURL: 'https://api.siliconflow.com/v1',
+      model: 'meta-llama/Llama-3.3-70B-Instruct',
+      systemPrompt: 'You are a professional translator. Translate the text directly without any explanations.',
+      userPrompt: `Translate to ${targetLanguage}:\n${text}`,
+    },
+    text, targetLanguage, signal,
+  );
+}
+
+function translateWithKimiAPI(text: string, targetLanguage: string, signal: AbortSignal) {
+  return openAICompatTranslate(
+    {
+      apiKey: process.env.KIMI_API_KEY,
+      baseURL: getKimiApiBaseUrl(),
+      model: 'moonshot-v1-128k',
+      systemPrompt: `You are a professional translator. Translate the following text to ${targetLanguage}. Keep the original format and style.`,
+    },
+    text, targetLanguage, signal,
+  );
+}
+
+function translateWithStepAPI(text: string, targetLanguage: string, signal: AbortSignal) {
+  return openAICompatTranslate(
+    {
+      apiKey: process.env.STEP_API_KEY,
+      baseURL: 'https://api.stepfun.ai/v1',
+      model: 'step-2-16k',
+    },
+    text, targetLanguage, signal,
+  );
+}
+
+async function translateWithClaudeAPI(
+  text: string,
+  targetLanguage: string,
+  signal: AbortSignal,
+): Promise<TranslationResult> {
+  return translateWithAnthropicClaude(
+    text,
+    targetLanguage,
+    'You are a professional translator. Translate the text directly without any explanations.',
+    signal,
+  );
+}
+
+async function translateWithGeminiAPI(
+  text: string,
+  targetLanguage: string,
+  signal: AbortSignal,
+): Promise<TranslationResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('Gemini API key not found');
   const { GoogleGenerativeAI } = await import('@google/generative-ai');
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-  // Send the whole text in a single request instead of one call per paragraph.
+
+  // Gemini SDK (v0.x) lacks AbortSignal support in generateContent, so we only
+  // honor aborts already raised before issuing the request. Mid-flight cancels
+  // will let the upstream call finish, but the response is discarded below.
+  if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
   const result = await model.generateContent([
     `Translate the following text to ${targetLanguage}. Return only the translated text, preserving paragraphs and line breaks:`,
     text,
   ]);
+  if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
   const response = await result.response;
-  return response.text().trim();
+  const out = response.text().trim();
+  if (!out) throw new Error('Empty translation from provider');
+  const finishReason = response.candidates?.[0]?.finishReason ?? '';
+  return { text: out, truncated: finishReason === 'MAX_TOKENS' };
 }
 
-async function translateWithStepAPI(text: string, targetLanguage: string) {
-  const apiKey = process.env.STEP_API_KEY;
-  if (!apiKey) {
-    throw new Error('StepFun API key not found');
+async function dispatch(
+  service: TranslateService,
+  text: string,
+  targetLanguage: string,
+  signal: AbortSignal,
+): Promise<TranslationResult> {
+  switch (service) {
+    case 'deepseek':    return translateWithDeepSeekAPI(text, targetLanguage, signal);
+    case 'qwen':        return translateWithQwenAPI(text, targetLanguage, signal);
+    case 'zhipu':       return translateWithZhipuAPI(text, targetLanguage, signal);
+    case '4o-mini':     return translateWith4oMiniAPI(text, targetLanguage, signal);
+    case 'hunyuan':     return translateWithHunyuanAPI(text, targetLanguage, signal);
+    case 'minimax':     return translateWithMinimaxAPI(text, targetLanguage, signal);
+    case 'siliconflow': return translateWithSiliconFlowAPI(text, targetLanguage, signal);
+    case 'kimi':        return translateWithKimiAPI(text, targetLanguage, signal);
+    case 'step':        return translateWithStepAPI(text, targetLanguage, signal);
+    case 'claude':
+    case 'claude_3_5': return translateWithClaudeAPI(text, targetLanguage, signal);
+    case 'gemini':      return translateWithGeminiAPI(text, targetLanguage, signal);
   }
+}
 
-  const openai = new OpenAI({
-    apiKey: apiKey,
-    baseURL: 'https://api.stepfun.ai/v1'
-  });
+export const POST = withAuth(async (request, auth) => {
+  const locale = getRequestLocale(request);
+  const signal = request.signal;
 
-  const response = await openai.chat.completions.create({
-    model: 'step-2-16k',
-    messages: [
-      {
-        role: 'system',
-        content: `You are a professional translator. Translate the following text to ${targetLanguage}. Only return the translated text, no explanations.`
-      },
-      {
-        role: 'user',
-        content: text
-      }
-    ],
-    temperature: 0.3,
-    max_tokens: 2000
-  });
+  try {
+    const parsed = await parseJson(request, TranslateBody, locale);
+    if (!parsed.ok) return parsed.response;
+    const { text, targetLanguage, service = 'deepseek' } = parsed.data;
 
-  return response.choices[0].message.content || '';
-} 
+    const rateCheck = await checkRateLimit(auth.userId, 'translate');
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      );
+    }
+
+    let result: TranslationResult;
+    let actualService: TranslateService = service;
+
+    try {
+      result = await dispatch(service, text, targetLanguage, signal);
+    } catch (serviceError) {
+      if (isAbortError(serviceError) || signal.aborted) throw serviceError;
+      console.error(
+        `[translate] userId=${auth.userId} service=${service} failed:`,
+        serviceError instanceof Error ? serviceError.message : serviceError,
+      );
+      if (service === 'deepseek') throw serviceError;
+      // Fallback: retry via DeepSeek. Record the service that actually
+      // produced the text so history doesn't lie about provenance.
+      console.log(`[translate] userId=${auth.userId} fallback: ${service} -> deepseek`);
+      result = await translateWithDeepSeekAPI(text, targetLanguage, signal);
+      actualService = 'deepseek';
+    }
+
+    if (result.text) {
+      // Defer history persistence until after the response is sent. `after()`
+      // keeps the serverless runtime alive for the callback, unlike
+      // fire-and-forget which can be killed mid-write.
+      after(() =>
+        saveTranslation({
+          userId: auth.userId,
+          sourceText: text,
+          translatedText: result.text,
+          targetLanguage,
+          service: actualService,
+        }),
+      );
+    }
+
+    return NextResponse.json({
+      text: result.text,
+      service: actualService,
+      fellBack: actualService !== service,
+      truncated: result.truncated,
+    });
+  } catch (error) {
+    if (isAbortError(error) || signal.aborted) {
+      // 499 mirrors nginx's "client closed request" convention.
+      return NextResponse.json({ error: 'aborted' }, { status: 499 });
+    }
+    console.error(
+      '[translate] error:',
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    );
+    return NextResponse.json(
+      { error: apiMsg(locale, 'translateFailed') },
+      { status: 500 },
+    );
+  }
+});
