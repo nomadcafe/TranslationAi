@@ -159,16 +159,13 @@ async function processContent(content: string, locale: AppLocale) {
 // Mistral OCR pipeline for PDF.
 async function processPdfWithMistral(file: string, filename: string, locale: AppLocale) {
   try {
-    console.log('开始使用 Mistral OCR 处理 PDF...')
-    
     // Mistral SDK client.
     const client = new Mistral({ apiKey: MISTRAL_API_KEY || '' });
-    
+
     // Decode base64 payload to Buffer.
     const fileBuffer = Buffer.from(file, 'base64');
-    
+
     // Upload to Mistral Files.
-    console.log('上传文件到 Mistral...')
     let uploadData;
     try {
       uploadData = await client.files.upload({
@@ -178,27 +175,23 @@ async function processPdfWithMistral(file: string, filename: string, locale: App
         },
         purpose: "ocr"
       });
-      console.log('文件上传成功，ID:', uploadData.id);
     } catch (uploadError: any) {
       console.error('Mistral 文件上传错误:', uploadError);
       throw new Error(uploadError.message || apiMsg(locale, 'mistralUploadFailed'));
     }
-    
+
     // Signed URL for OCR document_url input.
-    console.log('获取签名 URL...');
     let signedUrlData;
     try {
       signedUrlData = await client.files.getSignedUrl({
         fileId: uploadData.id,
       });
-      console.log('获取签名 URL 成功');
     } catch (signedUrlError: any) {
       console.error('获取签名 URL 错误:', signedUrlError);
       throw new Error(signedUrlError.message || apiMsg(locale, 'signedUrlFailed'));
     }
-    
+
     // Run OCR on the signed document URL.
-    console.log('开始 OCR 处理...');
     let ocrData: any;
     try {
       ocrData = await client.ocr.process({
@@ -212,43 +205,38 @@ async function processPdfWithMistral(file: string, filename: string, locale: App
       console.error('Mistral OCR 错误:', ocrError);
       throw new Error(ocrError.message || apiMsg(locale, 'ocrProcessFailed'));
     }
-    
+
     // Accumulate extracted text across pages/fields.
     let extractedText = '';
-    
+
     // Guard empty OCR responses.
     if (!ocrData) {
       console.error('Mistral OCR 返回空响应');
       throw new Error(apiMsg(locale, 'ocrEmptyResponse'));
     }
-    
+
     // Plain string response (markdown).
     if (typeof ocrData === 'string') {
-      console.log('OCR 返回 Markdown 格式的文本');
       // Already markdown text.
       return ocrData.trim();
     }
-    
+
     // Try common top-level fields.
     if (ocrData.markdown) {
-      console.log('从 markdown 字段提取文本');
       return String(ocrData.markdown).trim();
     }
-    
+
     // Fallback: text / content.
     if (ocrData.text) {
-      console.log('从 text 字段提取文本');
       return String(ocrData.text).trim();
     }
-    
+
     if (ocrData.content) {
-      console.log('从 content 字段提取文本');
       return typeof ocrData.content === 'string' ? ocrData.content.trim() : JSON.stringify(ocrData.content);
     }
-    
+
     // Nested result object variants.
     if (ocrData.result) {
-      console.log('从 result 字段提取文本');
       if (typeof ocrData.result === 'string') {
         return ocrData.result.trim();
       } else if (typeof ocrData.result === 'object' && ocrData.result !== null) {
@@ -262,24 +250,18 @@ async function processPdfWithMistral(file: string, filename: string, locale: App
         }
       }
     }
-    
+
     // Page-array output (most common for Mistral OCR).
     if (ocrData.pages) {
-      console.log(`发现 pages 字段，包含 ${Array.isArray(ocrData.pages) ? ocrData.pages.length : '未知数量'} 页`);
-      
       // Concatenate per-page text.
       if (Array.isArray(ocrData.pages)) {
-        console.log(`提取 ${ocrData.pages.length} 页的文本`);
-        
-        extractedText = ocrData.pages.map((page: any, index: number) => {
+        extractedText = ocrData.pages.map((page: any) => {
           if (!page) {
-            console.log(`第 ${index + 1} 页为空`);
             return '';
           }
-          
+
           // Prefer page.markdown (primary Mistral OCR output).
           if (page.markdown) {
-            console.log(`从第 ${index + 1} 页的markdown字段提取文本`);
             return page.markdown;
           } else if (page.text) {
             return page.text;
@@ -290,7 +272,7 @@ async function processPdfWithMistral(file: string, filename: string, locale: App
           }
         }).join('\n\n');
       } else {
-        console.error('Mistral OCR 响应中 pages 不是数组:', ocrData.pages);
+        console.error('Mistral OCR 响应中 pages 不是数组')
         // Non-array pages: coerce to string/JSON.
         if (typeof ocrData.pages === 'string') {
           return ocrData.pages.trim();
@@ -299,19 +281,15 @@ async function processPdfWithMistral(file: string, filename: string, locale: App
         }
       }
     } else {
-      console.log('OCR 响应中没有找到 pages 字段，尝试从整个响应中提取文本');
       // Last resort: stringify whole payload.
       return JSON.stringify(ocrData);
     }
-    
-    console.log(`提取的文本长度: ${extractedText.length} 字符`);
-    
+
     // Avoid returning blank extraction silently.
     if (!extractedText || extractedText.trim() === '') {
-      console.log('提取的文本为空，返回默认消息');
       return apiMsg(locale, 'pdfNoTextFallback');
     }
-    
+
     return extractedText.trim();
   } catch (error: any) {
     console.error('Mistral OCR 处理错误:', error);
@@ -369,21 +347,16 @@ export const POST = withAuth(async (request, auth) => {
       
       if (service === 'kimi') {
         // Kimi multi-step flow.
-        console.log('开始使用 Kimi API 处理...')
         // Step 1: upload
-        console.log('开始上传文件...')
         const fileObject = await uploadFile(file, filename, locale)
-        
+
         // Step 2: download content
-        console.log('开始获取文件内容...')
         const fileContent = await getFileContent(fileObject.id, locale)
-        
+
         // Step 3: LLM extract
-        console.log('开始处理文件内容...')
         result = await processContent(fileContent, locale)
       } else if (service === 'mistral') {
         // Mistral OCR path
-        console.log('开始使用 Mistral OCR API 处理...')
         result = await processPdfWithMistral(file, filename, locale)
       }
 
