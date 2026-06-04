@@ -54,7 +54,6 @@ export const POST = withAuth(async (request, auth) => {
     })
 
     try {
-      console.log('开始创建视频识别任务...')
       const params = {
         VideoUrl: videoUrl,
         Params: JSON.stringify([{
@@ -70,8 +69,6 @@ export const POST = withAuth(async (request, auth) => {
         }
       })
       
-      console.log('创建任务结果:', result)
-
       if (!result.RequestId) {
         throw new Error(apiMsg(locale, 'videoTaskNoRequestId'))
       }

@@ -79,7 +79,6 @@ export const POST = withAuth(async (request, auth) => {
 
     try {
       // Fetch task output / state.
-      console.log('开始查询任务结果, taskId:', taskId)
       const params = {
         JobId: taskId
       }
@@ -92,21 +91,15 @@ export const POST = withAuth(async (request, auth) => {
           'content-type': 'application/x-www-form-urlencoded'
         }
       })
-      
-      console.log('原始查询结果:', JSON.stringify(result, null, 2))
 
       // Validate response envelope.
       if (!result || !result.Data) {
-        console.log('未获取到Data字段:', result)
         throw new Error('查询任务失败：未获取到任务结果')
       }
-
-      console.log('任务状态:', result.Data.Status)
 
       // Map vendor status -> HTTP + payload.
       switch (result.Data.Status) {
         case 'PROCESS_RUNNING':
-          console.log('任务正在处理中...')
           return NextResponse.json({
             success: true,
             status: 'running',
@@ -114,7 +107,6 @@ export const POST = withAuth(async (request, auth) => {
           }, { status: 202 })
 
         case 'PROCESS_FAILED':
-          console.log('任务处理失败:', result.Data)
           return NextResponse.json({
             success: false,
             status: 'failed',
@@ -123,13 +115,11 @@ export const POST = withAuth(async (request, auth) => {
           }, { status: 500 })
 
         case 'PROCESS_SUCCESS':
-          console.log('任务处理成功，开始解析结果')
           let ocrResult: VideoOCRResult | null = null
-          
+
           try {
             // Parse JSON-ish Result field when present.
             if (result.Data.Result) {
-              console.log('解析字符串结果:', result.Data.Result)
               if (typeof result.Data.Result === 'string') {
                 ocrResult = JSON.parse(result.Data.Result)
               } else {
@@ -200,7 +190,6 @@ export const POST = withAuth(async (request, auth) => {
 
           } catch (e) {
             console.error('解析OCR结果失败:', e)
-            console.log('返回原始结果')
             return NextResponse.json({
               success: true,
               status: 'success',
@@ -212,7 +201,6 @@ export const POST = withAuth(async (request, auth) => {
           }
 
         case 'PROCESS_PENDING':
-          console.log('任务等待处理中...')
           return NextResponse.json({
             success: true,
             status: 'pending',
@@ -220,7 +208,6 @@ export const POST = withAuth(async (request, auth) => {
           }, { status: 202 })
 
         default:
-          console.log('收到未知任务状态:', result.Data.Status, '完整结果:', result.Data)
           return NextResponse.json({
             success: true,
             status: result.Data.Status,

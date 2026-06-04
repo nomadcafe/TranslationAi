@@ -118,7 +118,7 @@ export async function POST(req: Request) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[webhook] signature verification failed:', msg)
-    return new NextResponse(`Webhook Error: ${msg}`, { status: 400 })
+    return new NextResponse('Invalid signature', { status: 400 })
   }
 
   const sql = neon(databaseUrl)

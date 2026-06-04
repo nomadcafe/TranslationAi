@@ -208,21 +208,6 @@ async function processPdfWithMistral(file: string, filename: string, locale: App
           documentUrl: signedUrlData.url,
         }
       });
-      console.log('OCR 处理完成，响应数据类型:', typeof ocrData);
-      if (typeof ocrData === 'object' && ocrData !== null) {
-        console.log('OCR 响应数据结构:', Object.keys(ocrData).join(', '));
-        // Verbose debug logging of OCR payload shape.
-        for (const key of Object.keys(ocrData)) {
-          console.log(`OCR 响应字段 ${key} 类型:`, typeof ocrData[key]);
-          if (key === 'pages' && Array.isArray(ocrData.pages)) {
-            console.log('pages 数组长度:', ocrData.pages.length);
-            if (ocrData.pages.length > 0) {
-              console.log('第一页结构:', Object.keys(ocrData.pages[0]).join(', '));
-            }
-          }
-        }
-      }
-      console.log('OCR 响应数据片段:', typeof ocrData === 'string' ? ocrData.substring(0, 500) : JSON.stringify(ocrData).substring(0, 500) + '...');
     } catch (ocrError: any) {
       console.error('Mistral OCR 错误:', ocrError);
       throw new Error(ocrError.message || apiMsg(locale, 'ocrProcessFailed'));
@@ -301,7 +286,6 @@ async function processPdfWithMistral(file: string, filename: string, locale: App
           } else if (page.content) {
             return typeof page.content === 'string' ? page.content : JSON.stringify(page.content);
           } else {
-            console.log(`第 ${index + 1} 页没有文本内容:`, page);
             return '';
           }
         }).join('\n\n');

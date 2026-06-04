@@ -56,12 +56,6 @@ export const POST = withAuth(async (request) => {
       )
     }
 
-    console.log('文件信息:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    })
-
     // OSS client from long-lived server credentials.
     const ossClient = new OSS({
       region: aliyunOssSdkRegion(),
@@ -78,8 +72,7 @@ export const POST = withAuth(async (request) => {
       // Put object to bucket.
       const ext = file.name.split('.').pop()
       const fileName = `videos/${uuidv4()}.${ext}`
-      console.log('开始上传文件到 OSS...')
-      
+
       // ali-oss put may be callback-style; promisify.
       const uploadResult = await new Promise((resolve, reject) => {
         try {
@@ -93,8 +86,6 @@ export const POST = withAuth(async (request) => {
           reject(err)
         }
       })
-
-      console.log('文件上传成功:', uploadResult)
 
       return NextResponse.json({
         success: true,
