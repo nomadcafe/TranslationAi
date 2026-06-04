@@ -12,26 +12,23 @@ export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request)
   const signal = request.signal
 
-  const rateCheck = await checkRateLimit(auth.userId, 'default')
-  if (!rateCheck.allowed) {
-    return NextResponse.json(
-      { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
-      { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
-    )
-  }
-
-  const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
-  if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
-
-  const apiKey = process.env.STEP_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: apiMsg(locale, 'apiKeyNotConfigured') },
-      { status: 500 }
-    );
-  }
-
   try {
+    const rateCheck = await checkRateLimit(auth.userId, 'default')
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'rateLimitExceeded'), retryAfter: rateCheck.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter ?? 60) } },
+      )
+    }
+
+    const apiKey = process.env.STEP_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'apiKeyNotConfigured') },
+        { status: 500 }
+      );
+    }
+
     let formData: FormData
     try {
       formData = await request.formData();
@@ -53,10 +50,26 @@ export const POST = withAuth(async (request, auth) => {
       )
     }
 
+    // Resolve the image into something StepFun can fetch. A server-side File
+    // must be inlined as a base64 data URI — URL.createObjectURL would produce a
+    // blob: URL that only resolves inside a browser document.
+    let imageUrl: string
+    if (image instanceof File) {
+      const buffer = Buffer.from(await image.arrayBuffer())
+      const mime = image.type || 'image/jpeg'
+      imageUrl = `data:${mime};base64,${buffer.toString('base64')}`
+    } else {
+      imageUrl = image.toString()
+    }
+
+    // Consume quota only after the request is fully validated, so a missing API
+    // key or bad upload never burns an (irreversible) credit.
+    const quota = await checkAndRecordUsage(auth.userId, 'image', locale)
+    if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 })
+
     const openai = new OpenAI({
       apiKey: apiKey,
       baseURL: 'https://api.stepfun.ai/v1',
-      dangerouslyAllowBrowser: true,
       timeout: 30000 // 30s
     });
 
@@ -84,7 +97,7 @@ export const POST = withAuth(async (request, auth) => {
                 role: 'user',
                 content: [
                   { type: 'text', text: userLine },
-                  { type: 'image_url', image_url: { url: image instanceof File ? URL.createObjectURL(image) : image.toString() } }
+                  { type: 'image_url', image_url: { url: imageUrl } }
                 ]
               }
             ]

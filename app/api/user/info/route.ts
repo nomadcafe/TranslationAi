@@ -68,28 +68,10 @@ export const GET = withAuth(async (_req, auth) => {
     ` as User[]
 
     if (!users.length) {
-      console.log('未找到用户记录')
       return new NextResponse('User not found', { status: 404 })
     }
 
     const user = users[0]
-    console.log('查询到的用户信息:', {
-      id: user.id,
-      email: user.email,
-      subscription: {
-        customerId: user.stripe_customer_id,
-        subscriptionId: user.stripe_subscription_id,
-        priceId: user.stripe_price_id,
-        currentPeriodEnd: user.stripe_current_period_end
-      },
-      quotas: {
-        text: user.text_quota,
-        image: user.image_quota,
-        pdf: user.pdf_quota,
-        speech: user.speech_quota,
-        video: user.video_quota
-      }
-    })
 
     // Treat ended/canceled subs as inactive.
     if (user.stripe_current_period_end) {
@@ -97,8 +79,7 @@ export const GET = withAuth(async (_req, auth) => {
       const now = new Date().getTime()
       
       if (now > currentPeriodEnd) {
-        console.log('订阅已过期，重置为试用版（按月配额）')
-        const firstDay = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`
+        const firstDay =`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`
         const q = FREE_QUOTA
         await sql`
           UPDATE auth_users
@@ -168,8 +149,6 @@ export const GET = withAuth(async (_req, auth) => {
           GROUP BY type
         ` as UsageRecord[]
 
-    console.log('今日使用记录:', usage)
-
     // Shape JSON for the client dashboard.
     const response = {
       user: {
@@ -205,10 +184,9 @@ export const GET = withAuth(async (_req, auth) => {
 
     // Attach per-feature usage tallies.
     usage.forEach((record) => {
-      response.usage[record.type] = parseInt(record.count)
+      response.usage[record.type] = parseInt(record.count, 10)
     })
 
-    console.log('返回的用户信息:', response)
     return NextResponse.json(response)
   } catch (error) {
     console.error('获取用户信息失败:', error)
