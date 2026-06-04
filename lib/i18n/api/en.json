@@ -75,6 +75,7 @@
   "aliyunAsrRequestFailed": "Aliyun speech API request failed",
   "asrCreateTaskFailed": "Failed to create recognition task",
   "missingVideoUrl": "Missing video URL",
+  "invalidMediaUrl": "The media URL is invalid or not allowed",
   "videoTaskNoRequestId": "Task creation failed: no request ID returned",
   "videoTaskCreateFailed": "Failed to create video recognition task",
   "textRequired": "Text is required",

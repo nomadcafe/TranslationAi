@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { neon } from '@neondatabase/serverless'
 import { withAuth } from '@/lib/server/with-auth'
+import { FREE_QUOTA, getQuotasByPriceId } from '@/lib/quota-plans'
 
 interface User {
   id: string;
@@ -98,21 +99,19 @@ export const GET = withAuth(async (_req, auth) => {
       if (now > currentPeriodEnd) {
         console.log('订阅已过期，重置为试用版（按月配额）')
         const firstDay = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`
+        const q = FREE_QUOTA
         await sql`
-          UPDATE auth_users 
+          UPDATE auth_users
           SET stripe_subscription_id = NULL, stripe_price_id = NULL, stripe_current_period_end = NULL,
-              text_quota = -1, image_quota = 5, pdf_quota = 3, speech_quota = 2, video_quota = 1,
+              text_quota = ${q.text_quota}, image_quota = ${q.image_quota}, pdf_quota = ${q.pdf_quota},
+              speech_quota = ${q.speech_quota}, video_quota = ${q.video_quota},
               quota_reset_at = ${firstDay}
           WHERE id = ${user.id}
         `
         user.stripe_subscription_id = null
         user.stripe_price_id = null
         user.stripe_current_period_end = null
-        user.text_quota = -1
-        user.image_quota = 5
-        user.pdf_quota = 3
-        user.speech_quota = 2
-        user.video_quota = 1
+        Object.assign(user, q)
         user.quota_reset_at = firstDay
       }
     }
@@ -123,29 +122,34 @@ export const GET = withAuth(async (_req, auth) => {
     const isPaid = user.stripe_price_id === process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ||
       user.stripe_price_id === process.env.NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID
 
-    // Paid: daily reset; free: monthly reset window.
+    // Paid: daily reset; free: monthly reset window. Quota numbers come from the
+    // single source of truth (lib/quota-plans). The `IS DISTINCT FROM` guard makes
+    // the reset idempotent under concurrent requests for the same user.
     if (isPaid) {
       if (user.quota_reset_at !== today) {
-        const quotaUpdate = user.stripe_price_id === process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID
-          ? { text_quota: -1, image_quota: 50, pdf_quota: 40, speech_quota: 30, video_quota: 10 }
-          : { text_quota: -1, image_quota: 100, pdf_quota: 80, speech_quota: 60, video_quota: 20 }
+        const q = getQuotasByPriceId(
+          user.stripe_price_id,
+          process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID,
+          process.env.NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID,
+        )
         await sql`
-          UPDATE auth_users SET image_quota = ${quotaUpdate.image_quota}, pdf_quota = ${quotaUpdate.pdf_quota},
-            speech_quota = ${quotaUpdate.speech_quota}, video_quota = ${quotaUpdate.video_quota}, quota_reset_at = ${today}
-          WHERE id = ${user.id}
+          UPDATE auth_users SET image_quota = ${q.image_quota}, pdf_quota = ${q.pdf_quota},
+            speech_quota = ${q.speech_quota}, video_quota = ${q.video_quota}, quota_reset_at = ${today}
+          WHERE id = ${user.id} AND quota_reset_at IS DISTINCT FROM ${today}
         `
-        Object.assign(user, quotaUpdate)
+        Object.assign(user, q)
       }
     } else {
       const resetAt = user.quota_reset_at ? new Date(user.quota_reset_at) : null
       const isNewMonth = !resetAt || resetAt.getFullYear() !== now.getFullYear() || resetAt.getMonth() !== now.getMonth()
       if (isNewMonth) {
-        const quotaUpdate = { text_quota: -1, image_quota: 5, pdf_quota: 3, speech_quota: 2, video_quota: 1 }
+        const q = FREE_QUOTA
         await sql`
-          UPDATE auth_users SET image_quota = 5, pdf_quota = 3, speech_quota = 2, video_quota = 1, quota_reset_at = ${firstDayOfMonth}
-          WHERE id = ${user.id}
+          UPDATE auth_users SET image_quota = ${q.image_quota}, pdf_quota = ${q.pdf_quota},
+            speech_quota = ${q.speech_quota}, video_quota = ${q.video_quota}, quota_reset_at = ${firstDayOfMonth}
+          WHERE id = ${user.id} AND quota_reset_at IS DISTINCT FROM ${firstDayOfMonth}
         `
-        Object.assign(user, quotaUpdate)
+        Object.assign(user, q)
       }
     }
 

@@ -1,8 +1,7 @@
 /**
- * Idempotent additive migration for the translations table.
- *
- * Safe to run against a production database that already has auth_users
- * populated. Does not drop or alter existing tables. Run with:
+ * Idempotent additive migrations. Safe to run repeatedly against a production
+ * database that already has auth_users populated — only creates objects that are
+ * missing and never drops or rewrites existing data. Run with:
  *   tsx lib/db/add-translations.ts
  */
 import { neon } from '@neondatabase/serverless'
@@ -29,6 +28,24 @@ async function run() {
   await sql`CREATE INDEX IF NOT EXISTS idx_translations_user_created ON translations(user_id, created_at DESC)`
   await sql`CREATE INDEX IF NOT EXISTS idx_translations_user_favorite ON translations(user_id, created_at DESC) WHERE is_favorite`
   console.log('translations table ready')
+
+  // Index the hot quota-count queries (WHERE user_id = ? AND type = ? AND used_at ...).
+  await sql`CREATE INDEX IF NOT EXISTS idx_usage_records_user_type_used ON usage_records(user_id, type, used_at)`
+  console.log('usage_records index ready')
+
+  // Stripe webhook idempotency ledger. The webhook no longer creates this on the
+  // hot path, so it must exist before deploying. The ADD COLUMN backfills the
+  // crash-safe `processed` flag for tables created by the old inline DDL.
+  await sql`
+    CREATE TABLE IF NOT EXISTS stripe_events (
+      id VARCHAR(255) PRIMARY KEY,
+      event_type VARCHAR(100),
+      processed BOOLEAN NOT NULL DEFAULT FALSE,
+      processed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    )
+  `
+  await sql`ALTER TABLE stripe_events ADD COLUMN IF NOT EXISTS processed BOOLEAN NOT NULL DEFAULT FALSE`
+  console.log('stripe_events table ready')
 }
 
 run().catch((err) => {

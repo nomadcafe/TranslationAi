@@ -5,6 +5,7 @@ import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { RegisterBody } from '@/lib/validation/schemas'
 import { checkRateLimitByIp } from '@/lib/server/rate-limit'
 import { getClientIp } from '@/lib/server/client-ip'
+import { FREE_QUOTA } from '@/lib/quota-plans'
 
 const databaseUrl = process.env.DATABASE_URL?.trim()
 const sql = databaseUrl ? neon(databaseUrl) : null
@@ -44,16 +45,12 @@ export async function POST(req: Request) {
     }
     const { email, password } = parsed.data
 
-    const existingUser = await sql`SELECT id FROM auth_users WHERE email = ${email}`
-    if (existingUser.length > 0) {
-      return NextResponse.json(
-        { error: apiMsg(locale, 'emailAlreadyRegistered') },
-        { status: 400 }
-      )
-    }
-
     const hashedPassword = await bcrypt.hash(password, 10)
 
+    // Atomic insert: the UNIQUE(email) constraint is the authoritative guard, so
+    // two concurrent registrations of the same email can't both succeed. An empty
+    // result means the row already existed. Only select the columns we return —
+    // never RETURNING * (which would pull password_hash into the handler).
     const result = await sql`
       INSERT INTO auth_users (
         email,
@@ -67,14 +64,22 @@ export async function POST(req: Request) {
       VALUES (
         ${email},
         ${hashedPassword},
-        -1,
-        5,
-        3,
-        2,
-        1
+        ${FREE_QUOTA.text_quota},
+        ${FREE_QUOTA.image_quota},
+        ${FREE_QUOTA.pdf_quota},
+        ${FREE_QUOTA.speech_quota},
+        ${FREE_QUOTA.video_quota}
       )
-      RETURNING *
+      ON CONFLICT (email) DO NOTHING
+      RETURNING id, email
     `
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        { error: apiMsg(locale, 'emailAlreadyRegistered') },
+        { status: 400 }
+      )
+    }
 
     return NextResponse.json(
       {

@@ -30,10 +30,14 @@ const providers: AuthOptions['providers'] = [
           throw new Error('Server is not configured for sign-in (missing DATABASE_URL)')
         }
 
+        // Emails are stored lowercased at registration, so normalize here too —
+        // otherwise "Foo@x.com" cannot log into the account stored as "foo@x.com".
+        const email = credentials.email.trim().toLowerCase()
+
         // Two-layer rate limit: IP blocks generic hammering from one source,
         // email blocks distributed credential-stuffing against one account.
         // Check email bucket first — it's the bucket an attacker cares about.
-        const emailCheck = await checkRateLimitByEmail(credentials.email, 'login_email')
+        const emailCheck = await checkRateLimitByEmail(email, 'login_email')
         if (!emailCheck.allowed) {
           throw new Error('Too many attempts, please try again later')
         }
@@ -45,7 +49,7 @@ const providers: AuthOptions['providers'] = [
 
         try {
           const result = await sql`
-            SELECT id, email, name, password_hash FROM auth_users WHERE email = ${credentials.email}
+            SELECT id, email, name, password_hash FROM auth_users WHERE email = ${email}
           `
           const user = result[0]
 
@@ -135,9 +139,14 @@ export const authOptions: AuthOptions = {
       const incomingId = account.providerAccountId
       if (!incomingId) return false
 
+      // Match the lowercased storage used by credentials registration so an
+      // OAuth provider returning mixed-case email still resolves the same row
+      // (otherwise the takeover guard is skipped and a duplicate row is created).
+      const email = user.email.trim().toLowerCase()
+
       try {
         const existing = await sql`
-          SELECT id, github_id, google_id FROM auth_users WHERE email = ${user.email}
+          SELECT id, github_id, google_id FROM auth_users WHERE email = ${email}
         ` as { id: number; github_id: string | null; google_id: string | null }[]
 
         // First-time OAuth sign-in for this email – provision a fresh row.
@@ -145,16 +154,18 @@ export const authOptions: AuthOptions = {
           if (provider === 'github') {
             await sql`
               INSERT INTO auth_users (email, name, github_id, text_quota, image_quota, pdf_quota, speech_quota, video_quota)
-              VALUES (${user.email}, ${user.name}, ${incomingId},
+              VALUES (${email}, ${user.name}, ${incomingId},
                       ${FREE_QUOTA.text_quota}, ${FREE_QUOTA.image_quota}, ${FREE_QUOTA.pdf_quota},
                       ${FREE_QUOTA.speech_quota}, ${FREE_QUOTA.video_quota})
+              ON CONFLICT (email) DO NOTHING
             `
           } else {
             await sql`
               INSERT INTO auth_users (email, name, google_id, text_quota, image_quota, pdf_quota, speech_quota, video_quota)
-              VALUES (${user.email}, ${user.name}, ${incomingId},
+              VALUES (${email}, ${user.name}, ${incomingId},
                       ${FREE_QUOTA.text_quota}, ${FREE_QUOTA.image_quota}, ${FREE_QUOTA.pdf_quota},
                       ${FREE_QUOTA.speech_quota}, ${FREE_QUOTA.video_quota})
+              ON CONFLICT (email) DO NOTHING
             `
           }
           return true
@@ -192,7 +203,7 @@ export const authOptions: AuthOptions = {
       if (user) token.id = user.id
       if (!token.id && token.email && sql) {
         try {
-          const rows = await sql`SELECT id FROM auth_users WHERE email = ${token.email}` as { id: number }[]
+          const rows = await sql`SELECT id FROM auth_users WHERE email = ${token.email.trim().toLowerCase()}` as { id: number }[]
           if (rows.length > 0) token.id = rows[0].id
         } catch (e) {
           console.error('[auth] jwt callback DB error:', e instanceof Error ? e.message : e)

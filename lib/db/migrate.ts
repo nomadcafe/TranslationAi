@@ -68,6 +68,7 @@ async function migrate() {
         CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES auth_users(id) ON DELETE CASCADE
       )
     `
+    await sql`CREATE INDEX idx_usage_records_user_type_used ON usage_records(user_id, type, used_at)`
     console.log('Created usage_records table')
 
     // payment_history
@@ -102,6 +103,18 @@ async function migrate() {
     await sql`CREATE INDEX idx_translations_user_created ON translations(user_id, created_at DESC)`
     await sql`CREATE INDEX idx_translations_user_favorite ON translations(user_id, created_at DESC) WHERE is_favorite`
     console.log('Created translations table')
+
+    // stripe_events: Stripe webhook idempotency ledger (processed crash-safely).
+    await sql`DROP TABLE IF EXISTS stripe_events`
+    await sql`
+      CREATE TABLE stripe_events (
+        id VARCHAR(255) PRIMARY KEY,
+        event_type VARCHAR(100),
+        processed BOOLEAN NOT NULL DEFAULT FALSE,
+        processed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      )
+    `
+    console.log('Created stripe_events table')
 
     console.log('Migration completed successfully')
   } catch (error) {

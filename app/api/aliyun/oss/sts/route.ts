@@ -51,16 +51,12 @@ export const GET = withAuth(async (request) => {
       }
     })
   } catch (error: any) {
-    console.error('STS token error:', error?.code, error?.message)
-    return NextResponse.json({
-      success: false,
-      message: `${apiMsg(locale, 'credentialFetchFailed')}: ${error.message || ''}`.trim(),
-      error: {
-        code: error.code,
-        message: error.message,
-        data: error.data,
-        statusCode: error.statusCode
-      }
-    }, { status: 500 })
+    // Log the raw Aliyun error (may contain RAM ARNs / request internals)
+    // server-side only; return a generic message to the client.
+    console.error('STS token error:', error?.code, error?.message, error?.statusCode)
+    return NextResponse.json(
+      { success: false, message: apiMsg(locale, 'credentialFetchFailed') },
+      { status: 500 },
+    )
   }
 }, { errorField: 'message' })

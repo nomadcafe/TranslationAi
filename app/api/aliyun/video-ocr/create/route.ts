@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import RPCClient from '@alicloud/pop-core'
 import { checkAndRecordUsage } from '@/lib/server/quota'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
-import { aliyunVideorecogEndpoint } from '@/lib/server/aliyun-region'
+import { aliyunVideorecogEndpoint, isAllowedOssMediaUrl } from '@/lib/server/aliyun-region'
 import { parseJson } from '@/lib/server/validate'
 import { VideoUrlBody } from '@/lib/validation/schemas'
 import { withAuth } from '@/lib/server/with-auth'
@@ -24,9 +24,6 @@ export const POST = withAuth(async (request, auth) => {
       )
     }
 
-    const quota = await checkAndRecordUsage(auth.userId, 'video', locale)
-    if (!quota.allowed) return NextResponse.json({ message: quota.error }, { status: 403 })
-
     if (!process.env.ALIYUN_OSS_REGION) {
       return NextResponse.json({ message: apiMsg(locale, 'ossEnvMissing') }, { status: 500 })
     }
@@ -37,6 +34,17 @@ export const POST = withAuth(async (request, auth) => {
     })
     if (!parsed.ok) return parsed.response
     const { videoUrl } = parsed.data
+
+    // SSRF guard: only let Aliyun fetch media from our own OSS bucket, never an
+    // attacker-supplied internal/third-party URL.
+    if (!isAllowedOssMediaUrl(videoUrl)) {
+      return NextResponse.json({ message: apiMsg(locale, 'invalidMediaUrl') }, { status: 400 })
+    }
+
+    // Consume quota only after the request is fully validated, so a bad URL
+    // never burns a credit (the decrement is irreversible).
+    const quota = await checkAndRecordUsage(auth.userId, 'video', locale)
+    if (!quota.allowed) return NextResponse.json({ message: quota.error }, { status: 403 })
 
     const client = new RPCClient({
       accessKeyId: process.env.ALIYUN_ACCESS_KEY_ID || '',
