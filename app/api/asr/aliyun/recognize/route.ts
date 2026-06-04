@@ -6,6 +6,7 @@ import { AsrRecognizeBody } from '@/lib/validation/schemas';
 import { withAuth } from '@/lib/server/with-auth';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 import { isAbortError } from '@/lib/server/openai-compat-translate';
+import { isAllowedOssMediaUrl } from '@/lib/server/aliyun-region';
 
 export const POST = withAuth(async (request, auth) => {
   const locale = getRequestLocale(request);
@@ -19,12 +20,19 @@ export const POST = withAuth(async (request, auth) => {
       );
     }
 
-    const quota = await checkAndRecordUsage(auth.userId, 'speech', locale);
-    if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 });
-
     const parsed = await parseJson(request, AsrRecognizeBody, locale);
     if (!parsed.ok) return parsed.response;
     const { audioUrl, appKey, token } = parsed.data;
+
+    // SSRF guard: Aliyun NLS fetches audio_url server-side, so only allow our
+    // own OSS bucket — not attacker-supplied internal/third-party URLs.
+    if (!isAllowedOssMediaUrl(audioUrl)) {
+      return NextResponse.json({ error: apiMsg(locale, 'invalidMediaUrl') }, { status: 400 });
+    }
+
+    // Consume quota only after validation so a rejected request never burns a credit.
+    const quota = await checkAndRecordUsage(auth.userId, 'speech', locale);
+    if (!quota.allowed) return NextResponse.json({ error: quota.error }, { status: 403 });
 
     const response = await fetch('https://nls-gateway.aliyuncs.com/stream/v1/asr', {
       method: 'POST',

@@ -75,6 +75,7 @@
   "aliyunAsrRequestFailed": "阿里云语音识别请求失败",
   "asrCreateTaskFailed": "创建识别任务失败",
   "missingVideoUrl": "缺少视频 URL",
+  "invalidMediaUrl": "媒体 URL 无效或不被允许",
   "videoTaskNoRequestId": "创建任务失败：未获取到任务 ID",
   "videoTaskCreateFailed": "创建视频识别任务失败",
   "textRequired": "缺少要翻译的文本",

@@ -123,24 +123,27 @@ export async function POST(req: Request) {
 
   const sql = neon(databaseUrl)
 
-  // Idempotency: claim the event by id. Stripe retries the same event on
-  // transient failures, so we must only apply side effects once.
+  // Idempotency (crash-safe): claim the event id, run side effects, then mark it
+  // processed. Stripe retries the same event on transient failures. We skip only
+  // events that previously completed (processed = true); a claim left unprocessed
+  // by a crashed delivery is re-run, which is safe because every handler below is
+  // idempotent (idempotent UPDATEs + ON CONFLICT inserts). The stripe_events
+  // table is created by the DB migration, not on this hot path.
   try {
-    await sql`
-      CREATE TABLE IF NOT EXISTS stripe_events (
-        id VARCHAR(255) PRIMARY KEY,
-        event_type VARCHAR(100),
-        processed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-      )
-    `
     const claim = (await sql`
       INSERT INTO stripe_events (id, event_type) VALUES (${event.id}, ${event.type})
       ON CONFLICT (id) DO NOTHING
       RETURNING id
     `) as { id: string }[]
     if (claim.length === 0) {
-      // Duplicate – already handled on a previous delivery.
-      return new NextResponse(null, { status: 200 })
+      const prior = (await sql`
+        SELECT processed FROM stripe_events WHERE id = ${event.id}
+      `) as { processed: boolean }[]
+      if (prior[0]?.processed) {
+        // Already fully handled on a previous delivery.
+        return new NextResponse(null, { status: 200 })
+      }
+      // A previous attempt crashed before finishing — fall through and re-process.
     }
   } catch (err) {
     console.error('[webhook] idempotency claim failed:', err instanceof Error ? err.message : err)
@@ -190,7 +193,13 @@ export async function POST(req: Request) {
         await applySubscriptionState(sql, userId, subscription)
 
         // Log payment outcome for the user's history. Use ON CONFLICT to stay
-        // idempotent in case Stripe redelivers the invoice event.
+        // idempotent in case Stripe redelivers the invoice event. A missing
+        // invoice id can't be deduped (Postgres treats NULL as distinct in a
+        // UNIQUE column), so skip the history row rather than insert a NULL.
+        if (!invoice.id) {
+          console.warn('[webhook]', event.type, 'has no invoice id; skipping payment_history')
+          break
+        }
         const status = event.type === 'invoice.payment_succeeded' ? 'succeeded' : 'failed'
         const amount = event.type === 'invoice.payment_succeeded' ? invoice.amount_paid : invoice.amount_due
         await sql`
@@ -202,14 +211,18 @@ export async function POST(req: Request) {
       }
     }
 
+    // Mark the claim processed only after all side effects succeeded. If we
+    // crashed earlier, processed stays false and the next Stripe retry re-runs.
+    await sql`
+      UPDATE stripe_events SET processed = TRUE, processed_at = CURRENT_TIMESTAMP
+      WHERE id = ${event.id}
+    `
     return new NextResponse(null, { status: 200 })
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error)
     console.error('[webhook] handler failed:', msg)
-    // Release the idempotency claim so Stripe can retry successfully.
-    try {
-      await sql`DELETE FROM stripe_events WHERE id = ${event.id}`
-    } catch {}
+    // Leave the claim unprocessed (processed = false) so Stripe's retry re-runs
+    // the idempotent handler. No need to release the claim.
     return new NextResponse('Webhook handler failed', { status: 500 })
   }
 }
