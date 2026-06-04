@@ -6,6 +6,21 @@ dotenv.config({ path: '.env.local' })
 const sql = neon(process.env.NEW_DATABASE_URL || process.env.DATABASE_URL!)
 
 async function migrate() {
+  // This migration is DESTRUCTIVE: it DROPs auth_users, translations,
+  // usage_records and payment_history, deleting all data. Refuse to run unless
+  // the operator has explicitly opted in, so an accidental invocation (e.g.
+  // against production via DATABASE_URL) cannot silently wipe the database.
+  if (process.env.ALLOW_DESTRUCTIVE_MIGRATION !== '1') {
+    const target = (process.env.NEW_DATABASE_URL || process.env.DATABASE_URL || '')
+      .replace(/\/\/[^@/]*@/, '//***@')
+    console.error(
+      'Refusing to run: migrate() DROPs all tables and permanently deletes all data.\n' +
+        `  Target database: ${target || '(none configured)'}\n` +
+        '  Re-run with ALLOW_DESTRUCTIVE_MIGRATION=1 if this is intentional.',
+    )
+    process.exit(1)
+  }
+
   try {
     // Enable uuid-ossp for UUID helpers.
     await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`
