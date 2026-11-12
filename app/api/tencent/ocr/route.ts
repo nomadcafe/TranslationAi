@@ -6,7 +6,8 @@ import { ImageBody } from '@/lib/validation/schemas';
 import { withAuth } from '@/lib/server/with-auth';
 import { checkRateLimit } from '@/lib/server/rate-limit';
 
-const tencentcloud = require("tencentcloud-sdk-nodejs");
+import * as tencentcloud from 'tencentcloud-sdk-nodejs-ocr';
+
 const OcrClient = tencentcloud.ocr.v20181119.Client;
 
 export const POST = withAuth(async (request, auth) => {
