@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import OSS from 'ali-oss'
-import { v4 as uuidv4 } from 'uuid'
 import { getRequestLocale, apiMsg } from '@/lib/server/request-i18n'
 import { aliyunOssSdkRegion } from '@/lib/server/aliyun-region'
 import { withAuth } from '@/lib/server/with-auth'
@@ -71,7 +70,7 @@ export const POST = withAuth(async (request) => {
 
       // Put object to bucket.
       const ext = file.name.split('.').pop()
-      const fileName = `videos/${uuidv4()}.${ext}`
+      const fileName = `videos/${crypto.randomUUID()}.${ext}`
 
       // ali-oss put may be callback-style; promisify.
       const uploadResult = await new Promise((resolve, reject) => {
