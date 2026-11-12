@@ -80,7 +80,7 @@
     "next": "^15.5.29",
     "next-auth": "^4.24.11",
     "next-themes": "^0.4.6",
-    "openai": "^4.77.4",
+    "openai": "^7.55.0",
     "pdfjs-dist": "^4.10.38",
     "pg": "^8.13.1",
     "postcss": "^8.5.32",
@@ -101,7 +101,7 @@
     "tencentcloud-sdk-nodejs-ocr": "^4.0.1007",
     "typescript": "^5.6.3",
     "vaul": "^1.1.2",
-    "zod": "^3.23.8",
+    "zod": "^4.6.7",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
@@ -111,5 +111,8 @@
     "coffee-script": "^1.12.7",
     "coffeescript": "^2.7.0",
     "tsx": "^4.19.2"
+  },
+  "overrides": {
+    "zod": "$zod"
   }
 }
