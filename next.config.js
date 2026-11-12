@@ -4,8 +4,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
-  // Load ali-oss from node_modules at runtime instead of bundling it; its
-  // urllib/proxy-agent chain pulls in vm2/coffee-script, which webpack can't bundle cleanly.
+  // ali-oss is a Node-only SDK; load it from node_modules at runtime instead of bundling it.
   serverExternalPackages: ['ali-oss'],
 };
 
