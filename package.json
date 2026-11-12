@@ -113,6 +113,9 @@
     "tsx": "^4.19.2"
   },
   "overrides": {
-    "zod": "$zod"
+    "zod": "$zod",
+    "next": {
+      "postcss": "$postcss"
+    }
   }
 }
